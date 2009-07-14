@@ -195,6 +195,7 @@ public class MergedMap {
 					Math.min(new_node.getParentNode().getChildPosition(new_node),
 							merged_map.getNodeFromID(temp_parent_id).getChildCount()));
 			real_id_index.put(change.id, added.getObjectId(added.getMap().getModeController()));
+			merged_map_id_to_real_id.put(added.getObjectId(added.getMap().getModeController()), change.id);
 		}
 		
 		String temp_id = real_id_index.get(change.id);
