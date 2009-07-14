@@ -102,7 +102,7 @@ freemind.main.Resources.getInstance().logException(			e);
                     .getMap(), null, null);
             controller.getActionFactory().startTransaction(
                     this.getClass().getName());
-            ((SharingActionFactory)controller.getActionFactory()).remoteExecuteAction(
+            (controller.getActionFactory()).executeAction(
                     new ActionPair(doAction, undoAction));
             controller.getActionFactory().endTransaction(
                     this.getClass().getName());
