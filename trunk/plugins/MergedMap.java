@@ -1,0 +1,248 @@
+package plugins;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Vector;
+import java.util.Map.Entry;
+
+import plugins.ConflictList.Conflict;
+import plugins.ConflictList.ConflictType;
+import plugins.MapsDiff.ChangeList.Change;
+import plugins.MapsDiff.ChangeList.ChangeType;
+
+import freemind.controller.actions.generated.instance.NewNodeAction;
+import freemind.controller.filter.util.SortedMapVector;
+import freemind.modes.MindIcon;
+import freemind.modes.MindMapNode;
+import freemind.modes.NodeAdapter;
+import freemind.modes.attributes.NodeAttributeTableModel;
+import freemind.modes.mindmapmode.MindMapController;
+import freemind.modes.mindmapmode.MindMapMapModel;
+import freemind.modes.mindmapmode.MindMapNodeModel;
+
+public class MergedMap {
+	private enum MapType { V1, V2, MERGED };
+	
+	private MapSharingController mpc;
+	private ConflictList conflict_list;
+	
+	private MindMapController base_map;
+	private MindMapController v1_map;
+	private MindMapController v2_map;
+	private MindMapController merged_map;
+	
+	private MindMapNode v1_root_node;
+	private MindMapNode v2_root_node;
+	private MindMapNode merged_root_node;
+	
+	private HashMap<String, String> merged_map_id_to_real_id;
+	private HashMap<String, String> v1_real_id_index;
+	private HashMap<String, String> v2_real_id_index;
+	private HashMap<String, String> merged_real_id_index;
+	
+	private MapsDiff base_v1_diff;
+	private MapsDiff base_v2_diff;
+	
+	private HashMap<String, MindMapNode> v1_nodes;
+	private HashMap<String, MindMapNode> v2_nodes;
+	
+	/**
+	 * merged map checkpoint will follow v2's checkpoint
+	 * @param mpc
+	 * @param base_map
+	 * @param v1_map
+	 * @param v2_map
+	 */
+	public MergedMap(MapSharingController mpc, MindMapController base_map,
+			MindMapController v1_map, MindMapController v2_map) {
+		this.mpc = mpc;
+		this.base_map = base_map;
+		this.v1_map = v1_map;
+		this.v2_map = v2_map;
+		
+		this.base_v1_diff = new MapsDiff(mpc, (MindMapMapModel)base_map.getModel(), 
+				(MindMapMapModel)v1_map.getModel());
+		this.base_v2_diff = new MapsDiff(mpc, (MindMapMapModel)base_map.getModel(), 
+				(MindMapMapModel)v2_map.getModel());
+		
+		this.v1_nodes = MapHelper.getNodeList(this.v1_map.getRootNode());
+		this.v2_nodes = MapHelper.getNodeList(this.v2_map.getRootNode());
+		
+		this.conflict_list = new ConflictList(base_v1_diff, base_v2_diff, v1_nodes, v2_nodes);
+		this.merged_map_id_to_real_id = new HashMap<String, String>();
+		v1_real_id_index = new HashMap<String, String>();
+		v2_real_id_index = new HashMap<String, String>();
+		merged_real_id_index = new HashMap<String, String>();
+		
+		merged_map = (MindMapController)mpc.getController().getMode().createModeController();
+		new MindMapMapModel(mpc.getController().getModel().getFrame(), merged_map);
+		MindMapNode root_node = merged_map.getRootNode();
+		
+		this.v1_root_node = merged_map.newChild.addNewNode(root_node, root_node.getChildCount());
+		this.v2_root_node = merged_map.newChild.addNewNode(root_node, root_node.getChildCount());
+		this.merged_root_node = merged_map.newChild.addNewNode(root_node, root_node.getChildCount());
+		
+		v1_root_node.setText("V1");
+		v2_root_node.setText("V2");
+		merged_root_node.setText("Merged");
+		
+		copyTree(MapType.V1, (MindMapNodeModel)v1_root_node, (MindMapNodeModel)v1_map.getRootNode());
+		copyTree(MapType.V2, (MindMapNodeModel)v2_root_node, (MindMapNodeModel)v2_map.getRootNode());
+		copyTree(MapType.MERGED, (MindMapNodeModel)merged_root_node, (MindMapNodeModel)base_map.getRootNode());
+		
+		// apply nonconflicting changes
+		Vector<Change> changes_list = base_v1_diff.getChangesList().getList();
+		for (Change change : changes_list) {
+			if (!change.conflicting) {
+				applyChange(MapType.V2, change, 1);
+				applyChange(MapType.MERGED, change, 1);
+			}
+		}
+		changes_list = base_v2_diff.getChangesList().getList();
+		for (Change change : changes_list) {
+			if (!change.conflicting) {
+				applyChange(MapType.V1, change, 2);
+				applyChange(MapType.MERGED, change, 2);
+			}
+		}
+		
+		Vector<Conflict> conflicts = conflict_list.getList();
+		for (Conflict conflict : conflicts) {
+			if (conflict.type == ConflictType.NODE_DELETED_SUBTREE_MODIFIED ||
+					conflict.type == ConflictType.PARENT_CHANGES_NODE_DELETED) {
+				String id = conflict.id_v1 == null ? conflict.id_v2 : conflict.id_v1;
+				MindMapNode merged = merged_map.getNodeFromID(merged_real_id_index.get(id));
+				MindMapNode v1_or_v2 = merged_map.getNodeFromID(conflict.id_v1 == null ?
+						v1_real_id_index.get(id) : v2_real_id_index.get(id));
+				merged_map.addArrowLinkAction.addLink(merged, v1_or_v2);
+			} else if (conflict.type == ConflictType.DIFFERENT_ATTRIBUTES ||
+					conflict.type == ConflictType.PARENTS_CHANGE) {
+				MindMapNode merged = merged_map.getNodeFromID(merged_real_id_index.get(conflict.id_v1));
+				MindMapNode v1 = merged_map.getNodeFromID(v1_real_id_index.get(conflict.id_v1));
+				MindMapNode v2 = merged_map.getNodeFromID(v2_real_id_index.get(conflict.id_v1));
+				merged_map.addArrowLinkAction.addLink(merged, v1);
+				merged_map.addArrowLinkAction.addLink(merged, v2);
+			} else if (conflict.type == ConflictType.CYCLIC_PARENT){
+				MindMapNode merged = merged_map.getNodeFromID(merged_real_id_index.get(conflict.id_v1)).getParentNode();
+				MindMapNode v1 = merged_map.getNodeFromID(v1_real_id_index.get(conflict.id_v1));
+				MindMapNode v2 = merged_map.getNodeFromID(v2_real_id_index.get(conflict.id_v2));
+				merged_map.addArrowLinkAction.addLink(merged, v1);
+				merged_map.addArrowLinkAction.addLink(merged, v2);
+			}
+		}
+	}
+	
+	private void copyTree(MapType type, MindMapNodeModel version_node, MindMapNodeModel original_node) {
+		MindMapNodeModel temp = (MindMapNodeModel)merged_map.newChild.addNewNode(
+				version_node, version_node.getChildCount());
+		
+		String real_id = original_node.getObjectId(original_node.getModeController());
+		String temp_id = temp.getObjectId(merged_map);
+		merged_map_id_to_real_id.put(temp_id, real_id);
+		if (type == MapType.V1) {
+			v1_real_id_index.put(real_id, temp_id);
+		} else if (type == MapType.V2) {
+			v2_real_id_index.put(real_id, temp_id);
+		} else {
+			merged_real_id_index.put(real_id, temp_id);
+		}
+		
+		NodeHelper.copyNodeAttributes(original_node, temp);
+		int child_count = original_node.getChildCount();
+		for (int i = 0; i < child_count; ++i) {
+			copyTree(type, temp, (MindMapNodeModel)original_node.getChildAt(i));
+		}
+	}
+	
+	private void applyChange(MapType changed_map_type, MapsDiff.ChangeList.Change change, int version) {
+		MindMapController changed_map = version == 1 ? v1_map : v2_map;
+		MapsDiff diff = version == 1 ? base_v1_diff : base_v2_diff;
+		
+		HashMap<String, String> real_id_index;
+		if (changed_map_type == MapType.V1) {
+			real_id_index = v1_real_id_index;
+		} else if (changed_map_type == MapType.V2) {
+			real_id_index = v2_real_id_index;
+		} else {
+			real_id_index = merged_real_id_index;
+		}
+		
+		if (change.type == ChangeType.DELETED) {
+			String id = real_id_index.get(change.id);
+			if (id != null) {
+				merged_map.deleteNode(merged_map.getNodeFromID(id));
+				real_id_index.remove(change.id);
+				merged_map_id_to_real_id.remove(id);
+			}
+			return;
+		}
+		
+		if (change.type == ChangeType.PARENT_CHANGED) {
+			String new_parent = diff.getParentChangedNodes().get(change.id);
+			String temp_id = real_id_index.get(change.id);
+			String temp_new_parent_id = real_id_index.get(new_parent);
+			merged_map.getNodeFromID(temp_id)
+				.setParent(merged_map.getNodeFromID(temp_new_parent_id));
+			return;
+		}
+		
+		if (change.type == ChangeType.ADDED) {
+			String parent = diff.getAddedNodes().get(change.id);
+			String temp_parent_id = real_id_index.get(parent);
+			MindMapNode new_node = changed_map.getNodeFromID(change.id);
+			MindMapNode added = merged_map.newChild.addNewNode(
+					merged_map.getNodeFromID(temp_parent_id), 
+					Math.min(new_node.getParentNode().getChildPosition(new_node),
+							merged_map.getNodeFromID(temp_parent_id).getChildCount()));
+			real_id_index.put(change.id, added.getObjectId(added.getMap().getModeController()));
+		}
+		
+		String temp_id = real_id_index.get(change.id);
+		MindMapNode new_node = merged_map.getNodeFromID(temp_id);
+		MindMapNode original_node = changed_map.getNodeFromID(change.id);
+		NodeHelper.copyNodeAttributes((MindMapNodeModel)original_node, 
+				(MindMapNodeModel)new_node);
+	}
+	
+	public MindMapController getMergedMap() {
+		return merged_map;
+	}
+	public ConflictList getConflictList() {
+		return conflict_list;
+	}
+	public MapsDiff getMapDiff1() {
+		return base_v1_diff;
+	}
+	public MapsDiff getMapDiff2() {
+		return base_v2_diff;
+	}
+	
+	public MindMapController finalizedMergedMap() {
+		final MindMapController final_map = 
+			(MindMapController)mpc.getController().getMode().createModeController();
+		new MindMapMapModel(mpc.getController().getModel().getFrame(), final_map);
+		MapHelper.copyAttributeRegistry(v2_map, final_map);
+		MindMapNodeModel merged_root = (MindMapNodeModel) merged_root_node.getChildren().get(0);
+		String real_root_id = merged_map_id_to_real_id.get(merged_root.getObjectId(merged_map));
+		NewNodeAction new_node_action = final_map.newChild.getAddNodeAction(
+				final_map.getRootNode(), 0, real_root_id, merged_root.isLeft());
+		final_map.newChild.act(new_node_action);
+		final_map.getModel().setRoot(final_map.getNodeFromID(real_root_id));
+		restoreMergedMapSubtree(merged_root, (MindMapNodeModel)final_map.getRootNode());
+		return final_map;
+	}
+	
+	private void restoreMergedMapSubtree(MindMapNodeModel merged_root, MindMapNodeModel final_root) {
+		NodeHelper.copyNodeAttributes(merged_root, final_root);
+		MindMapController final_map = (MindMapController)final_root.getModeController();
+		int child_count = merged_root.getChildCount();
+		for (int i = 0; i < child_count; ++i) {
+			MindMapNodeModel merged_node = ((MindMapNodeModel)merged_root.getChildAt(i));
+			String real_id = merged_map_id_to_real_id.get(merged_node.getObjectId(merged_map));
+			NewNodeAction new_node_action = final_map.newChild.getAddNodeAction(
+					final_root, i, real_id, merged_node.isLeft());
+			final_map.newChild.act(new_node_action);
+			restoreMergedMapSubtree(merged_node, (MindMapNodeModel)final_root.getChildAt(i));
+		}
+	}
+}
