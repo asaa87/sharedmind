@@ -594,7 +594,7 @@ public class MapSharingController {
 				version2 = checkpoint_list2
 						.getPreviousCheckpointVersion(version2);
 			}
-			version1 = checkpoint_list2.getPreviousCheckpointVersion(version1);
+			version1 = checkpoint_list1.getPreviousCheckpointVersion(version1);
 		}
 		return null;
 	}
