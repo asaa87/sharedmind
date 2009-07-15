@@ -1,5 +1,8 @@
 package plugins;
 
+import java.io.IOException;
+import java.io.StringWriter;
+import java.io.Writer;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Vector;
@@ -55,6 +58,20 @@ public class MergedMap {
 	 */
 	public MergedMap(MapSharingController mpc, MindMapController base_map,
 			MindMapController v1_map, MindMapController v2_map) {
+//		StringWriter writer = new StringWriter();
+//		try {
+//			base_map.getModel().getXml(writer);
+//			System.out.println("base_map ----- " + writer.toString());
+//			writer.flush();
+//			v1_map.getModel().getXml(writer);
+//			System.out.println("v1_map ----- " + writer.toString());
+//			writer.flush();
+//			v2_map.getModel().getXml(writer);
+//			System.out.println("v2_map ----- " + writer.toString());
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
 		this.mpc = mpc;
 		this.base_map = base_map;
 		this.v1_map = v1_map;
@@ -92,6 +109,7 @@ public class MergedMap {
 		
 		// apply nonconflicting changes
 		Vector<Change> changes_list = base_v1_diff.getChangesList().getList();
+//		System.out.println(changes_list.toString());
 		for (Change change : changes_list) {
 			if (!change.conflicting) {
 				applyChange(MapType.V2, change, 1);
@@ -99,12 +117,15 @@ public class MergedMap {
 			}
 		}
 		changes_list = base_v2_diff.getChangesList().getList();
+//		System.out.println(changes_list.toString());
 		for (Change change : changes_list) {
 			if (!change.conflicting) {
 				applyChange(MapType.V1, change, 2);
 				applyChange(MapType.MERGED, change, 2);
 			}
 		}
+		
+		HashMap<String, MindMapNode> base_nodes = MapHelper.getNodeList(this.base_map.getRootNode());
 		
 		Vector<Conflict> conflicts = conflict_list.getList();
 		for (Conflict conflict : conflicts) {
@@ -117,6 +138,10 @@ public class MergedMap {
 				merged_map.addArrowLinkAction.addLink(merged, v1_or_v2);
 			} else if (conflict.type == ConflictType.DIFFERENT_ATTRIBUTES ||
 					conflict.type == ConflictType.PARENTS_CHANGE) {
+				if (!base_nodes.containsKey(conflict.id_v1)) {
+					Change add_node = new Change(conflict.id_v1, ChangeType.ADDED);
+					applyChange(MapType.MERGED, add_node, 1);
+				}
 				MindMapNode merged = merged_map.getNodeFromID(merged_real_id_index.get(conflict.id_v1));
 				MindMapNode v1 = merged_map.getNodeFromID(v1_real_id_index.get(conflict.id_v1));
 				MindMapNode v2 = merged_map.getNodeFromID(v2_real_id_index.get(conflict.id_v1));
@@ -155,6 +180,8 @@ public class MergedMap {
 	}
 	
 	private void applyChange(MapType changed_map_type, MapsDiff.ChangeList.Change change, int version) {
+//		System.out.println("changed_map_type " + changed_map_type
+//				+ ", change " + change.toString() + ", version " + version);
 		MindMapController changed_map = version == 1 ? v1_map : v2_map;
 		MapsDiff diff = version == 1 ? base_v1_diff : base_v2_diff;
 		
@@ -188,14 +215,16 @@ public class MergedMap {
 		
 		if (change.type == ChangeType.ADDED) {
 			String parent = diff.getAddedNodes().get(change.id);
-			String temp_parent_id = real_id_index.get(parent);
-			MindMapNode new_node = changed_map.getNodeFromID(change.id);
-			MindMapNode added = merged_map.newChild.addNewNode(
-					merged_map.getNodeFromID(temp_parent_id), 
-					Math.min(new_node.getParentNode().getChildPosition(new_node),
-							merged_map.getNodeFromID(temp_parent_id).getChildCount()));
-			real_id_index.put(change.id, added.getObjectId(added.getMap().getModeController()));
-			merged_map_id_to_real_id.put(added.getObjectId(added.getMap().getModeController()), change.id);
+			if (!real_id_index.containsKey(change.id)) {
+				String temp_parent_id = real_id_index.get(parent);
+				MindMapNode new_node = changed_map.getNodeFromID(change.id);
+				MindMapNode added = merged_map.newChild.addNewNode(
+						merged_map.getNodeFromID(temp_parent_id), 
+						Math.min(new_node.getParentNode().getChildPosition(new_node),
+								merged_map.getNodeFromID(temp_parent_id).getChildCount()));
+				real_id_index.put(change.id, added.getObjectId(added.getMap().getModeController()));
+				merged_map_id_to_real_id.put(added.getObjectId(added.getMap().getModeController()), change.id);
+			}
 		}
 		
 		String temp_id = real_id_index.get(change.id);
@@ -230,6 +259,15 @@ public class MergedMap {
 		final_map.newChild.act(new_node_action);
 		final_map.getModel().setRoot(final_map.getNodeFromID(real_root_id));
 		restoreMergedMapSubtree(merged_root, (MindMapNodeModel)final_map.getRootNode());
+		
+//			StringWriter fileout = new StringWriter();
+//			try {
+//				final_map.getModel().getXml(fileout);
+//			} catch (IOException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
+//			System.out.println("Merged map --- " + fileout.toString());
 		return final_map;
 	}
 	

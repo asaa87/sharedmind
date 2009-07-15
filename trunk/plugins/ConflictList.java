@@ -36,6 +36,23 @@ public class ConflictList {
 			HashMap<String, MindMapNode> v2_nodes) {
 		this.conflict_list = new Vector<Conflict>();
 
+		HashMap<String, String> v1_added = base_v1_diff.getAddedNodes();
+		HashMap<String, String> v2_added = base_v2_diff.getAddedNodes();
+		for (String id : v1_added.keySet()) {
+			if (v2_added.containsKey(id)) {
+				if (!NodeComparator.nodeEqual(v1_nodes.get(id), v2_nodes.get(id))) {
+					addConflict(id, null, ConflictType.DIFFERENT_ATTRIBUTES);
+					base_v1_diff.getChangesList().getEntry(id, ChangeType.ADDED).conflicting = true;
+					base_v2_diff.getChangesList().getEntry(id, ChangeType.ADDED).conflicting = true;
+				}
+				if (!v1_added.get(id).equals(v2_added.get(id))) {
+					addConflict(id, null, ConflictType.PARENTS_CHANGE);
+					base_v1_diff.getChangesList().getEntry(id, ChangeType.ADDED).conflicting = true;
+					base_v2_diff.getChangesList().getEntry(id, ChangeType.ADDED).conflicting = true;
+				}
+			}
+		}
+		
 		Vector<String> v1_edited = base_v1_diff.getEditedNodes();
 		Vector<String> v2_edited = base_v2_diff.getEditedNodes();
 		for (String id : v1_edited) {
