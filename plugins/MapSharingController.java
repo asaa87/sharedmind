@@ -53,6 +53,7 @@ public class MapSharingController {
 	 */
 	private int networkPort;
 	private MergedMap merged_map;
+	private MindMapController last_common_map;
 
 	public MapSharingController(MindMapController mmcontroller) {
 		this.mmController = mmcontroller;
@@ -535,7 +536,6 @@ public class MapSharingController {
 
 	private void mergeMap(MindMapController local_map_controller,
 			MindMapController current_map_controller) {
-		sharingWindow.addChat("------------------merging map---------------------");
 		MindMapController common_map_controller = (MindMapController) mmController
 				.getMode().createModeController();
 		new MindMapMapModel(mmController.getFrame(), common_map_controller);
@@ -546,7 +546,23 @@ public class MapSharingController {
 			File common_map_file = new File(common_map);
 			common_map_controller.getModel().load(
 					common_map_file.toURI().toURL());
+			mergeMap(common_map_controller, local_map_controller, current_map_controller);
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (XMLParseException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (URISyntaxException e) {
+			e.printStackTrace();
+		}
+	}
 
+	private void mergeMap(MindMapController common_map_controller, 
+			MindMapController local_map_controller, MindMapController current_map_controller) {
+		sharingWindow.addChat("------------------merging map---------------------");
+		try {
+			last_common_map = current_map_controller;
 			merged_map = new MergedMap(this, common_map_controller,
 					local_map_controller, current_map_controller);
 			System.out.println(merged_map.getConflictList().getList().toString());
@@ -577,7 +593,7 @@ public class MapSharingController {
 			e.printStackTrace();
 		}
 	}
-
+	
 	private String getCommonMapFile(MindMapController mmController1,
 			MindMapController mmController2) {
 		ReadOnlyCheckpointList checkpoint_list1 = new ReadOnlyCheckpointList(
@@ -602,7 +618,7 @@ public class MapSharingController {
 	public void onMergeFinished() {
 		MindMapController finalized_merged_map = merged_map
 				.finalizedMergedMap();
-		mergeMap(finalized_merged_map, mmController);
+		mergeMap(last_common_map, finalized_merged_map, mmController);
 	}
 
 	public Connection getConnection() {
