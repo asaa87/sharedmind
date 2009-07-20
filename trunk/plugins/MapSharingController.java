@@ -359,8 +359,8 @@ public class MapSharingController {
 		this.message_queue.addCollaborators(content.vector_clock);
 	}
 
-	public boolean hasMaxVectorClock() {
-		return this.message_queue.hasMaxVectorClock();
+	public boolean hasMaxVectorClock(String exception) {
+		return this.message_queue.hasMaxVectorClock(exception);
 	}
 
 	public void showCommunicationError(String error_message) {
