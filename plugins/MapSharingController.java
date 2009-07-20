@@ -238,6 +238,8 @@ public class MapSharingController {
 		this.message_queue = new MessageQueue(connection.getUserName(),
 				vector_clock);
 		this.checkpoint_list = new CheckpointList(this);
+		this.checkpoint_in_progress = null;
+		this.last_successful_checkpoint = null;
 		try {
 			for (Map.Entry<Integer, String> entry : content.checkpoint_list
 					.entrySet()) {
