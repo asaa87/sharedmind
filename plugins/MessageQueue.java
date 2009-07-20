@@ -114,11 +114,12 @@ public class MessageQueue implements Cloneable{
 		}
 	}
 
-	public boolean hasMaxVectorClock() {
+	public boolean hasMaxVectorClock(String exception) {
 		int local_clock = this.vector_clock.getClock(this.user_id);
         for (Map.Entry<String, Integer> entry : this.vector_clock) {
             if (current_participant.contains(entry.getKey())
-            		&& !entry.getKey().equals(this.user_id) 
+            		&& !entry.getKey().equals(this.user_id)
+                    && !entry.getKey().equals(exception)
             		&& local_clock < entry.getValue())
             	return false;
         }
