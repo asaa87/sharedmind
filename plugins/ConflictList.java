@@ -64,16 +64,18 @@ public class ConflictList {
 		}
 		
 		Vector<String> v1_deleted = base_v1_diff.getDeletedNodes();
+		Vector<String> v2_deleted = base_v2_diff.getDeletedNodes();
+		
 		for (String id : v1_deleted) {
-			if (base_v2_diff.isSubtreeModified(id)) {
+			if (!v2_deleted.contains(id) && base_v2_diff.isSubtreeModified(id)) {
 				addConflict(id, null, ConflictType.NODE_DELETED_SUBTREE_MODIFIED);
 				base_v1_diff.getChangesList().getEntry(id, ChangeType.DELETED).conflicting = true;
 				base_v2_diff.markAllChangesToSubtreeConflicting(id);
 			}
 		}
-		Vector<String> v2_deleted = base_v2_diff.getDeletedNodes();
+
 		for (String id : v2_deleted) {
-			if (base_v1_diff.isSubtreeModified(id)) {
+			if (!v1_deleted.contains(id) && base_v1_diff.isSubtreeModified(id)) {
 				addConflict(null, id, ConflictType.NODE_DELETED_SUBTREE_MODIFIED);
 				base_v2_diff.getChangesList().getEntry(id, ChangeType.DELETED).conflicting = true;
 				base_v1_diff.markAllChangesToSubtreeConflicting(id);
