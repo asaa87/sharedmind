@@ -1,12 +1,20 @@
 package plugins;
 
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Vector;
 import java.util.Map.Entry;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import app.comms.RcvChannel;
 
 import plugins.ConflictList.Conflict;
 import plugins.ConflictList.ConflictType;
@@ -15,6 +23,7 @@ import plugins.MapsDiff.ChangeList.ChangeType;
 
 import freemind.controller.actions.generated.instance.NewNodeAction;
 import freemind.controller.filter.util.SortedMapVector;
+import freemind.main.XMLParseException;
 import freemind.modes.MindIcon;
 import freemind.modes.MindMapNode;
 import freemind.modes.NodeAdapter;
@@ -24,6 +33,8 @@ import freemind.modes.mindmapmode.MindMapMapModel;
 import freemind.modes.mindmapmode.MindMapNodeModel;
 
 public class MergedMap {
+	private Log log = LogFactory.getLog(MergedMap.class);
+	
 	private enum MapType { V1, V2, MERGED };
 	
 	private MapSharingController mpc;
@@ -58,20 +69,20 @@ public class MergedMap {
 	 */
 	public MergedMap(MapSharingController mpc, MindMapController base_map,
 			MindMapController v1_map, MindMapController v2_map) {
-//		StringWriter writer = new StringWriter();
-//		try {
-//			base_map.getModel().getXml(writer);
-//			System.out.println("base_map ----- " + writer.toString());
-//			writer.flush();
-//			v1_map.getModel().getXml(writer);
-//			System.out.println("v1_map ----- " + writer.toString());
-//			writer.flush();
-//			v2_map.getModel().getXml(writer);
-//			System.out.println("v2_map ----- " + writer.toString());
-//		} catch (IOException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
+		StringWriter writer = new StringWriter();
+		try {
+			base_map.getModel().getXml(writer);
+			log.debug("base_map ----- " + writer.toString());
+			writer = new StringWriter();
+			v1_map.getModel().getXml(writer);
+			log.debug("v1_map ----- " + writer.toString());
+			writer = new StringWriter();
+			v2_map.getModel().getXml(writer);
+			log.debug("v2_map ----- " + writer.toString());
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		this.mpc = mpc;
 		this.base_map = base_map;
 		this.v1_map = v1_map;
@@ -82,7 +93,9 @@ public class MergedMap {
 		this.base_v2_diff = new MapsDiff(mpc, (MindMapMapModel)base_map.getModel(), 
 				(MindMapMapModel)v2_map.getModel());
 		
+		log.debug("get node list v1");
 		this.v1_nodes = MapHelper.getNodeList(this.v1_map.getRootNode());
+		log.debug("get node list v2");
 		this.v2_nodes = MapHelper.getNodeList(this.v2_map.getRootNode());
 		
 		this.conflict_list = new ConflictList(base_v1_diff, base_v2_diff, v1_nodes, v2_nodes);
@@ -109,7 +122,7 @@ public class MergedMap {
 		
 		// apply nonconflicting changes
 		Vector<Change> changes_list = base_v1_diff.getChangesList().getList();
-//		System.out.println(changes_list.toString());
+		log.debug(changes_list.toString());
 		for (Change change : changes_list) {
 			if (!change.conflicting) {
 				applyChange(MapType.V2, change, 1);
@@ -117,7 +130,7 @@ public class MergedMap {
 			}
 		}
 		changes_list = base_v2_diff.getChangesList().getList();
-//		System.out.println(changes_list.toString());
+		log.debug(changes_list.toString());
 		for (Change change : changes_list) {
 			if (!change.conflicting) {
 				applyChange(MapType.V1, change, 2);
@@ -128,6 +141,7 @@ public class MergedMap {
 		HashMap<String, MindMapNode> base_nodes = MapHelper.getNodeList(this.base_map.getRootNode());
 		
 		Vector<Conflict> conflicts = conflict_list.getList();
+		log.debug(conflicts.toString());
 		for (Conflict conflict : conflicts) {
 			if (conflict.type == ConflictType.NODE_DELETED_SUBTREE_MODIFIED ||
 					conflict.type == ConflictType.PARENT_CHANGES_NODE_DELETED) {
@@ -155,6 +169,7 @@ public class MergedMap {
 				merged_map.addArrowLinkAction.addLink(merged, v2);
 			}
 		}
+		this.merged_map.markAsMergingMap(this);
 	}
 	
 	private void copyTree(MapType type, MindMapNodeModel version_node, MindMapNodeModel original_node) {
@@ -180,8 +195,8 @@ public class MergedMap {
 	}
 	
 	private void applyChange(MapType changed_map_type, MapsDiff.ChangeList.Change change, int version) {
-//		System.out.println("changed_map_type " + changed_map_type
-//				+ ", change " + change.toString() + ", version " + version);
+		log.debug("changed_map_type " + changed_map_type
+				+ ", change " + change.toString() + ", version " + version);
 		MindMapController changed_map = version == 1 ? v1_map : v2_map;
 		MapsDiff diff = version == 1 ? base_v1_diff : base_v2_diff;
 		
@@ -248,6 +263,15 @@ public class MergedMap {
 	}
 	
 	public MindMapController finalizedMergedMap() {
+		StringWriter fileout = new StringWriter();
+		try {
+			merged_map.getModel().getXml(fileout);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		log.debug("Merged map --- " + fileout.toString());
+		log.debug(merged_map_id_to_real_id.toString());
 		final MindMapController final_map = 
 			(MindMapController)mpc.getController().getMode().createModeController();
 		new MindMapMapModel(mpc.getController().getModel().getFrame(), final_map);
@@ -258,16 +282,8 @@ public class MergedMap {
 				final_map.getRootNode(), 0, real_root_id, merged_root.isLeft());
 		final_map.newChild.act(new_node_action);
 		final_map.getModel().setRoot(final_map.getNodeFromID(real_root_id));
+		NodeHelper.copyNodeAttributes(merged_root, (MindMapNodeModel)final_map.getNodeFromID(real_root_id));
 		restoreMergedMapSubtree(merged_root, (MindMapNodeModel)final_map.getRootNode());
-		
-//			StringWriter fileout = new StringWriter();
-//			try {
-//				final_map.getModel().getXml(fileout);
-//			} catch (IOException e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//			}
-//			System.out.println("Merged map --- " + fileout.toString());
 		return final_map;
 	}
 	
@@ -281,7 +297,60 @@ public class MergedMap {
 			NewNodeAction new_node_action = final_map.newChild.getAddNodeAction(
 					final_root, i, real_id, merged_node.isLeft());
 			final_map.newChild.act(new_node_action);
+			NodeHelper.copyNodeAttributes(merged_node, (MindMapNodeModel)final_map.getNodeFromID(real_id));
 			restoreMergedMapSubtree(merged_node, (MindMapNodeModel)final_root.getChildAt(i));
+		}
+	}
+	
+	public void addNodeToMergedMap(String parent, String new_node_id) {
+		if (merged_real_id_index.containsValue(parent)) {
+			merged_map_id_to_real_id.put(new_node_id, new_node_id);
+			merged_real_id_index.put(new_node_id, new_node_id);
+		}
+	}
+	
+	public void moveSubtree(String node_id) {
+		if (!merged_real_id_index.containsValue(node_id)) {
+			HashMap<String, String> real_id_index = 
+				v1_real_id_index.containsValue(node_id) ? v1_real_id_index : v2_real_id_index;
+			moveSubtree(node_id, real_id_index);
+		}
+	}
+	
+	private void moveSubtree(String node_id, HashMap<String, String> real_id_index) {
+		String real_id = merged_map_id_to_real_id.get(node_id);
+		real_id_index.remove(real_id);
+		merged_real_id_index.put(real_id, node_id);
+		List<NodeAdapter> children = merged_map.getNodeFromID(node_id).getChildren();
+		for (NodeAdapter child : children) {
+			moveSubtree(child.getObjectId(merged_map), real_id_index);
+		}
+	}
+	
+	public void showMergingMap() {
+		File file;
+		try {
+			String merged_root_id = this.merged_root_node.getObjectId(this.merged_map);
+			String v1_root_id = this.v1_root_node.getObjectId(this.merged_map);
+			String v2_root_id = this.v2_root_node.getObjectId(this.merged_map);
+			file = File.createTempFile("merging", "mm");
+			FileWriter writer = new FileWriter(file);
+			merged_map.getModel().getXml(writer);
+			writer.close();
+			merged_map = (MindMapController) merged_map.load(file.toURI().toURL());
+			this.merged_root_node = merged_map.getNodeFromID(merged_root_id);
+			this.v1_root_node = merged_map.getNodeFromID(v1_root_id);
+			this.v2_root_node = merged_map.getNodeFromID(v2_root_id);
+			merged_map.markAsMergingMap(this);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (XMLParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (URISyntaxException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 }
