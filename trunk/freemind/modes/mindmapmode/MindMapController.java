@@ -77,6 +77,8 @@ import javax.swing.text.html.HTMLEditorKit;
 import org.jibx.runtime.IUnmarshallingContext;
 import org.jibx.runtime.JiBXException;
 
+import plugins.MergedMap;
+
 import freemind.common.XmlBindingTools;
 import freemind.controller.MenuBar;
 import freemind.controller.MenuItemEnabledListener;
@@ -201,6 +203,7 @@ import freemind.modes.mindmapmode.actions.UseRichFormattingAction;
 import freemind.modes.mindmapmode.actions.NodeBackgroundColorAction.RemoveNodeBackgroundColorAction;
 import freemind.modes.mindmapmode.actions.xml.ActionFactory;
 import freemind.modes.mindmapmode.actions.xml.ActionPair;
+import freemind.modes.mindmapmode.actions.xml.MergingActionFactory;
 import freemind.modes.mindmapmode.actions.xml.NodeHookUndoableContentActor;
 import freemind.modes.mindmapmode.actions.xml.SharingActionFactory;
 import freemind.modes.mindmapmode.actions.xml.UndoActionHandler;
@@ -2151,5 +2154,11 @@ freemind.main.Resources.getInstance().logException(					e1);
 		actionFactory = new ActionFactory(getController());
 	    compound = new CompoundActionHandler(this);
 	    createStandardActions();
+	}
+	
+	public void markAsMergingMap(MergedMap merged_map) {
+		actionFactory = new MergingActionFactory(getController(), merged_map);
+		compound = new CompoundActionHandler(this);
+		createStandardActions();
 	}
 }

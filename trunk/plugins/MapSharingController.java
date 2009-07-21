@@ -13,6 +13,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Vector;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import app.multicast.MulticastComm;
 
 import pl.edu.pjwstk.mteam.pubsub.presence.Presence;
@@ -30,6 +33,8 @@ import freemind.modes.mindmapmode.actions.xml.ActionPair;
 import freemind.modes.mindmapmode.actions.xml.SharingActionFactory;
 
 public class MapSharingController {
+	private Log log = LogFactory.getLog(MapSharingController.class);
+	
 	private P2PPSharingLoginWindow loginWindow;
 	private Connection connection;
 
@@ -229,6 +234,7 @@ public class MapSharingController {
 	}
 
 	public void loadMap(MapMessageContent content) {
+		log.debug("loading map");
 		mmController.stopSharingMap();
 		Controller controller = mmController.getController();
 		mmController.load(content.map);
@@ -573,25 +579,10 @@ public class MapSharingController {
 				this.sendChangeMap(merged_map.finalizedMergedMap());
 			} else {
 				sharingWindow.addChat("-------------conflict--------------");
-				MindMapController map = merged_map.getMergedMap();
-				MindMapController new_map = (MindMapController) getController()
-						.getMode().createModeController();
-				new MindMapMapModel(getController().getModel().getFrame(), new_map);
-				File file = File.createTempFile("merging", "mm");
-				FileWriter writer = new FileWriter(file);
-				map.getModel().getXml(writer);
-				writer.close();
-				new_map.load(file.toURI().toURL());
-
+				merged_map.showMergingMap();
 				sharingWindow.setEnableMergeFinishedButton(true);
 			}
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
 		} catch (XMLParseException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (URISyntaxException e) {
 			e.printStackTrace();
 		}
 	}
