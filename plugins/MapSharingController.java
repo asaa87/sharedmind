@@ -48,6 +48,7 @@ public class MapSharingController {
 	private Checkpoint checkpoint_in_progress;
 	private CheckpointList checkpoint_list;
 	private boolean has_map;
+	private boolean map_shared;
 	XmlBindingTools test;
 
 	/**
@@ -73,6 +74,7 @@ public class MapSharingController {
 		loginWindow.setVisible(true);
 		Presence.setPresenceInterval(60000);
 		merged_map = null;
+		map_shared = false;
 	}
 
 	/**
@@ -110,6 +112,8 @@ public class MapSharingController {
 	}
 
 	public synchronized void tryAddToMap(Message message) {
+		if (!this.map_shared)
+			return;
 		ExecuteMessageContent content = (ExecuteMessageContent) message.content;
 		VectorClock timestamp = new VectorClock(content.timestamp);
 		XmlAction doAction = test.unMarshall(content.doAction);
@@ -236,7 +240,7 @@ public class MapSharingController {
 
 	public void loadMap(MapMessageContent content) {
 		log.debug("loading map");
-		mmController.stopSharingMap();
+		this.stopSharingMap();
 		Controller controller = mmController.getController();
 		MapModuleManager map_module_manager = controller.getMapModuleManager();
 		List<MapModule> map_modules = map_module_manager.getMapModuleVector();
@@ -272,7 +276,7 @@ public class MapSharingController {
 			e.printStackTrace();
 		}
 		checkpoint_list = new CheckpointList(this);
-		mmController.shareMap();
+		this.shareMap();
 	}
 
 	public void unregister() {
@@ -340,13 +344,12 @@ public class MapSharingController {
 	}
 
 	public void subscribeToTopic(String topic) {
-		mmController.shareMap();
 		connection.subscribeToTopic(topic);
 	}
 
 	public void unsubscribeToTopic() {
 		connection.unsubscribeToTopic();
-		mmController.stopSharingMap();
+		this.stopSharingMap();
 		if (last_successful_checkpoint != null) {
 			last_successful_checkpoint.saveCheckpointToFile();
 		}
@@ -626,5 +629,19 @@ public class MapSharingController {
 
 	public Connection getConnection() {
 		return this.connection;
+	}
+	
+	public void shareMap() {
+		if (!this.map_shared) {
+			this.map_shared = true;
+			mmController.shareMap();
+		}
+	}
+	
+	public void stopSharingMap() {
+		if (this.map_shared) {
+			this.map_shared = false;
+			mmController.stopSharingMap();
+		}
 	}
 }

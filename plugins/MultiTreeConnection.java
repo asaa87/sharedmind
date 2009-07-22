@@ -124,6 +124,7 @@ public class MultiTreeConnection implements Connection {
 		if (message.sender.equals(userName))
 			return;
 		if (message.type == Message.MessageType.GET_MAP) {
+			mpc.shareMap();
 			if (mpc.hasMaxVectorClock(message.sender)) {
 				mpc.addCollaborator((GetMapMessageContent) message.content);
 				mpc.sendMap(message.sender);
