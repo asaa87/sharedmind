@@ -10,18 +10,18 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import app.multicast.MulticastComm;
-
 import pl.edu.pjwstk.mteam.pubsub.presence.Presence;
 import plugins.MapsDiff.ChangeList.Change;
 import freemind.common.XmlBindingTools;
 import freemind.controller.Controller;
+import freemind.controller.MapModuleManager;
 import freemind.controller.actions.generated.instance.NodeAction;
 import freemind.controller.actions.generated.instance.XmlAction;
 import freemind.main.XMLParseException;
@@ -31,6 +31,7 @@ import freemind.modes.mindmapmode.MindMapController;
 import freemind.modes.mindmapmode.MindMapMapModel;
 import freemind.modes.mindmapmode.actions.xml.ActionPair;
 import freemind.modes.mindmapmode.actions.xml.SharingActionFactory;
+import freemind.view.MapModule;
 
 public class MapSharingController {
 	private Log log = LogFactory.getLog(MapSharingController.class);
@@ -237,6 +238,15 @@ public class MapSharingController {
 		log.debug("loading map");
 		mmController.stopSharingMap();
 		Controller controller = mmController.getController();
+		MapModuleManager map_module_manager = controller.getMapModuleManager();
+		List<MapModule> map_modules = map_module_manager.getMapModuleVector();
+		String display_name = "";
+		for (MapModule map_module : map_modules) {
+			if (map_module.getModeController() == this.mmController)
+				display_name = map_module.getDisplayName();
+		}
+		log.debug("display name: " + display_name);
+		map_module_manager.tryToChangeToMapModule(display_name);
 		mmController.load(content.map);
 		mmController = (MindMapController) controller.getMapModule()
 				.getModeController();
