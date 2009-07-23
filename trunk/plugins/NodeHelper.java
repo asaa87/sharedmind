@@ -15,16 +15,13 @@ public class NodeHelper {
 			targetNode.setAttribute(i, originalNode.getAttribute(0));
 		}
 		targetNode.setBackgroundColor(originalNode.getBackgroundColor());
-		targetNode.setBold(originalNode.isBold());
 		targetNode.setCloud(originalNode.getCloud());
 		targetNode.setColor(originalNode.getColor());
 		targetNode.setEdge(originalNode.getEdge());
 		targetNode.setFolded(originalNode.isFolded());
 		targetNode.setFont(originalNode.getFont());
-		targetNode.setFontSize(Integer.parseInt(originalNode.getFontSize()));
 		targetNode.setHGap(originalNode.getHGap());
 		targetNode.setHistoryInformation(originalNode.getHistoryInformation());
-		targetNode.setItalic(originalNode.isItalic());
 		targetNode.setLeft(originalNode.isLeft());
 		targetNode.setLink(originalNode.getLink());
 		targetNode.setNoteText(originalNode.getNoteText());
@@ -42,6 +39,5 @@ public class NodeHelper {
 		targetNode.setUnderlined(originalNode.isUnderlined());
 		targetNode.setVGap(originalNode.getVGap());
 		targetNode.setXmlNoteText(originalNode.getXmlNoteText());
-		//targetNode.setXmlText(originalNode.getXmlText());
 	}
 }
