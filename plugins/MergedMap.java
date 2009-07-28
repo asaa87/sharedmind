@@ -333,7 +333,7 @@ public class MergedMap {
 			String merged_root_id = this.merged_root_node.getObjectId(this.merged_map);
 			String v1_root_id = this.v1_root_node.getObjectId(this.merged_map);
 			String v2_root_id = this.v2_root_node.getObjectId(this.merged_map);
-			file = File.createTempFile("merging", "mm");
+			file = File.createTempFile("merging", ".mm");
 			FileWriter writer = new FileWriter(file);
 			merged_map.getModel().getXml(writer);
 			writer.close();

@@ -159,7 +159,6 @@ public class MultiTreeConnection implements Connection {
 				this.connection.connect("", 0);
 			}
 			mpc.setTopic(topicID);
-			mpc.showGetMapWindow();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
