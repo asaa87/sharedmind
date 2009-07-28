@@ -25,11 +25,4 @@
 	<natures>
 		<nature>org.eclipse.jdt.core.javanature</nature>
 	</natures>
-	<linkedResources>
-		<link>
-			<name>log4j</name>
-			<type>2</type>
-			<location>C:/home/asa/workspace/FreeMind_integration/log4j</location>
-		</link>
-	</linkedResources>
 </projectDescription>
