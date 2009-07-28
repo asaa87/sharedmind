@@ -45,4 +45,10 @@ public class SharingPresenceCallback implements PresenceCallback {
 		mpc.getMessageQueue().setCurrentParticipant(participants);
 	}
 
+	@Override
+	public void onConnected() {
+		mpc.hideConnectingWindow();
+		mpc.showGetMapWindow();
+	}
+
 }

@@ -40,6 +40,7 @@ public class MapSharingController {
 	private Connection connection;
 
 	private SharingWindow sharingWindow;
+	private ConnectingWindow connecting_window;
 	private MindMapController mmController;
 	private MindMapNode currentlyEditedNode;
 	private MessageQueue message_queue;
@@ -344,6 +345,8 @@ public class MapSharingController {
 	}
 
 	public void subscribeToTopic(String topic) {
+		System.out.println("create connecting window");
+		showConnectingWindow();
 		connection.subscribeToTopic(topic);
 	}
 
@@ -410,7 +413,15 @@ public class MapSharingController {
 	public void showGetMapWindow() {
 		new GetMapWindow(sharingWindow, this);
 	}
+	
+	public void showConnectingWindow() {
+		this.connecting_window = new ConnectingWindow(sharingWindow, this);
+	}
 
+	public void hideConnectingWindow() {
+		this.connecting_window.hide();
+	}
+	
 	/**
 	 * Mark that this peer already has the map and initialise
 	 * checkpoint_in_progress and last_successful_checkpoint
