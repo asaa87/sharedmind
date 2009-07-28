@@ -17,7 +17,9 @@ import java.util.Vector;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import pl.edu.pjwstk.mteam.pubsub.presence.Presence;
+import app.multicast.presence.Presence;
+
+//import pl.edu.pjwstk.mteam.pubsub.presence.Presence;
 import plugins.MapsDiff.ChangeList.Change;
 import freemind.common.XmlBindingTools;
 import freemind.controller.Controller;
