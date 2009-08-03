@@ -18,6 +18,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import app.multicast.presence.Presence;
+import app.multicast.presence.PresenceMessage;
 
 //import pl.edu.pjwstk.mteam.pubsub.presence.Presence;
 import plugins.MapsDiff.ChangeList.Change;
@@ -648,6 +649,9 @@ public class MapSharingController {
 		if (!this.map_shared) {
 			this.map_shared = true;
 			mmController.shareMap();
+			sharingWindow.setVersion(Integer.parseInt(
+					(String) mmController.getModel().getRegistry().getAttributes()
+					.getElement("VERSION").getValues().firstElement()));
 		}
 	}
 	
@@ -656,5 +660,13 @@ public class MapSharingController {
 			this.map_shared = false;
 			mmController.stopSharingMap();
 		}
+	}
+
+	public void updateOnlineUserList(Vector<String> user_list) {
+		sharingWindow.setOnlineUserList(user_list);
+	}
+
+	public void onVersionChange(int version) {
+		sharingWindow.setVersion(version);
 	}
 }
