@@ -43,6 +43,7 @@ public class SharingPresenceCallback implements PresenceCallback {
 			participants.add(message.getUserName());
 		}
 		mpc.getMessageQueue().setCurrentParticipant(participants);
+		mpc.updateOnlineUserList(participants);
 	}
 
 	@Override

@@ -329,6 +329,7 @@ public class Checkpoint {
 	 * Called after a successful checkpointing
 	 */
 	private void onCheckpointingSuccess() {
+		this.mpc.onVersionChange(this.getVersion());
 		if (previous_checkpoint != null &&
 				previous_checkpoint.getVersion() != this.getVersion()) {
 			previous_checkpoint.saveCheckpointToFile();

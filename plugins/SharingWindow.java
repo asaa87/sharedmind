@@ -2,8 +2,14 @@ package plugins;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.util.List;
+import java.util.Vector;
+
+import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
 /*
@@ -25,9 +31,12 @@ public class SharingWindow extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
+    private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JTextArea chatArea;
     private javax.swing.JTextArea messageArea;
+    private javax.swing.JTextArea onlineUserListArea;
     private javax.swing.JTextField topicField;
+    private javax.swing.JLabel statusLabel;
 	private final MapSharingController mpc;
     
     public SharingWindow(final MapSharingController mpc) {
@@ -75,6 +84,30 @@ public class SharingWindow extends javax.swing.JFrame {
 			}
         	
         });
+        messageArea.addKeyListener(new KeyListener() {
+        	final javax.swing.JTextArea messageAreaCopy = messageArea;
+
+			@Override
+			public void keyPressed(KeyEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void keyReleased(KeyEvent e) {
+				if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+					mpc.sendChat(messageAreaCopy.getText().trim());
+					messageAreaCopy.setText("");
+				}
+			}
+
+			@Override
+			public void keyTyped(KeyEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+        	
+        });
         final SharingWindow sharing_window = this;
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
@@ -92,6 +125,18 @@ public class SharingWindow extends javax.swing.JFrame {
     	chatArea.append(chat + "\n");
     }
     
+    public void setOnlineUserList(Vector<String> user_list) {
+    	onlineUserListArea.setText("");
+    	for (String user : user_list) {
+    		onlineUserListArea.append(user + "\n");
+    	}
+    }
+    
+    public void setVersion(int version) {
+    	statusLabel.setText("Map Version: " + version);
+    	statusLabel.repaint();
+    }
+    
     private void initComponents() {
 
         jPanel1 = new javax.swing.JPanel();
@@ -103,18 +148,21 @@ public class SharingWindow extends javax.swing.JFrame {
         chatArea = new javax.swing.JTextArea();
         jScrollPane2 = new javax.swing.JScrollPane();
         messageArea = new javax.swing.JTextArea();
+        jScrollPane3 = new javax.swing.JScrollPane();
+        onlineUserListArea = new javax.swing.JTextArea();
         sendButton = new javax.swing.JButton();
         mergeFinishedButton = new javax.swing.JButton();
+        statusLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
         createButton.setText("Create Topic");
-        subscribeButton.setText("Subscribe to Topic");
-        unsubscribeButton.setText("Unsubscribe");
+        subscribeButton.setText("Connect");
+        unsubscribeButton.setText("Disconnect");
         mergeFinishedButton.setText("Merge Finished");
         mergeFinishedButton.setEnabled(false);
 
-        chatArea.setColumns(35);
+        chatArea.setColumns(20);
         chatArea.setEditable(false);
         chatArea.setRows(5);
         jScrollPane1.setViewportView(chatArea);
@@ -124,6 +172,13 @@ public class SharingWindow extends javax.swing.JFrame {
         jScrollPane2.setViewportView(messageArea);
 
         sendButton.setText("Send");
+        
+        onlineUserListArea.setColumns(15);
+        onlineUserListArea.setEditable(false);
+        onlineUserListArea.setRows(5);
+        jScrollPane3.setViewportView(onlineUserListArea);
+        
+        statusLabel.setText("");
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
@@ -132,19 +187,23 @@ public class SharingWindow extends javax.swing.JFrame {
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 465, Short.MAX_VALUE)
+                	.addGroup(jPanel1Layout.createSequentialGroup()
+                		.addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 470, Short.MAX_VALUE)
+                		.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                		.addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 100, Short.MAX_VALUE))
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addComponent(topicField, javax.swing.GroupLayout.PREFERRED_SIZE, 290, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(createButton)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+//                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+//                        .addComponent(createButton)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(subscribeButton)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(unsubscribeButton)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(mergeFinishedButton))
+                    .addComponent(statusLabel)
                     .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 600, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 470, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(sendButton, javax.swing.GroupLayout.DEFAULT_SIZE, 75, Short.MAX_VALUE)))
                 .addContainerGap())
@@ -155,16 +214,20 @@ public class SharingWindow extends javax.swing.JFrame {
                 .addContainerGap()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(topicField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(createButton)
+//                    .addComponent(createButton)
                     .addComponent(subscribeButton)
                     .addComponent(unsubscribeButton)
                     .addComponent(mergeFinishedButton))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 179, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                		.addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 179, javax.swing.GroupLayout.PREFERRED_SIZE)
+                		.addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 179, javax.swing.GroupLayout.PREFERRED_SIZE))  
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(sendButton, javax.swing.GroupLayout.DEFAULT_SIZE, 76, Short.MAX_VALUE)
                     .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 76, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(statusLabel)
                 .addContainerGap())
         );
 
