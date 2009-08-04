@@ -45,8 +45,12 @@ public class CheckpointList extends ReadOnlyCheckpointList {
 		mpc.getController().getModel().getRegistry().getAttributes()
 			.getElement(LATEST_VERSION_ATTRIBUTE).addValue(Integer.toString(latest_version));
 		mpc.getController().getModel().getRegistry().getAttributes()
+			.getElement(LATEST_VERSION_ATTRIBUTE).save();
+		mpc.getController().getModel().getRegistry().getAttributes()
 			.getElement(CHECKPOINT_LIST_ATTRIBUTE).removeValue(
 					version_to_previous_version.get(temp).toString());
+		mpc.getController().getModel().getRegistry().getAttributes()
+			.getElement(CHECKPOINT_LIST_ATTRIBUTE).save();
 		version_to_previous_version.remove(temp);
 		version_to_checkpoint.remove(temp);
 	}
@@ -58,5 +62,7 @@ public class CheckpointList extends ReadOnlyCheckpointList {
 		old.setFilename(filename);
 		mpc.getController().getModel().getRegistry().getAttributes()
 			.getElement(CHECKPOINT_LIST_ATTRIBUTE).addValue(old.toString());
+		mpc.getController().getModel().getRegistry().getAttributes()
+			.getElement(CHECKPOINT_LIST_ATTRIBUTE).save();
 	}
 }
