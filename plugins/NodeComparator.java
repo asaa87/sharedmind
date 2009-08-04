@@ -67,10 +67,10 @@ public class NodeComparator {
 		if (cloud1 == null && cloud2 == null)
 			return true;
 		if (cloud1 != null && cloud2!= null) {
-			return cloud1.getColor().equals(cloud2.getColor())
-					&& cloud1.getExteriorColor().equals(cloud2.getExteriorColor())
+			return objectEquals(cloud1.getColor(), cloud2.getColor())
+					&& objectEquals(cloud1.getExteriorColor(), cloud2.getExteriorColor())
 					&& cloud1.getRealWidth() == cloud2.getRealWidth()
-					&& cloud1.getStyle().equals(cloud2.getStyle())
+					&& objectEquals(cloud1.getStyle(), cloud2.getStyle())
 					&& cloud1.getWidth() == cloud2.getWidth();
 		}
 		return false;
