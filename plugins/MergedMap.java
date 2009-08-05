@@ -75,10 +75,10 @@ public class MergedMap {
 			log.debug("base_map ----- " + writer.toString());
 			writer = new StringWriter();
 			v1_map.getModel().getXml(writer);
-			log.debug("v1_map ----- " + writer.toString());
+			log.debug("mine ----- " + writer.toString());
 			writer = new StringWriter();
 			v2_map.getModel().getXml(writer);
-			log.debug("v2_map ----- " + writer.toString());
+			log.debug("theirs ----- " + writer.toString());
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
