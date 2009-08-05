@@ -9,6 +9,8 @@ import plugins.MergedMap;
 import freemind.controller.Controller;
 import freemind.controller.actions.generated.instance.MoveNodesAction;
 import freemind.controller.actions.generated.instance.NewNodeAction;
+import freemind.controller.actions.generated.instance.NodeAction;
+import freemind.controller.actions.generated.instance.PasteNodeAction;
 import freemind.controller.actions.generated.instance.XmlAction;
 import freemind.modes.NodeAdapter;
 import freemind.modes.mindmapmode.actions.MoveNodeAction;

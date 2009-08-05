@@ -293,7 +293,9 @@ public class MergedMap {
 		int child_count = merged_root.getChildCount();
 		for (int i = 0; i < child_count; ++i) {
 			MindMapNodeModel merged_node = ((MindMapNodeModel)merged_root.getChildAt(i));
-			String real_id = merged_map_id_to_real_id.get(merged_node.getObjectId(merged_map));
+			String temp_id = merged_node.getObjectId(merged_map);
+			String real_id = merged_map_id_to_real_id.containsKey(temp_id) ? 
+					merged_map_id_to_real_id.get(temp_id) : temp_id;
 			NewNodeAction new_node_action = final_map.newChild.getAddNodeAction(
 					final_root, i, real_id, merged_node.isLeft());
 			final_map.newChild.act(new_node_action);
@@ -320,7 +322,12 @@ public class MergedMap {
 	private void moveSubtree(String node_id, HashMap<String, String> real_id_index) {
 		String real_id = merged_map_id_to_real_id.get(node_id);
 		real_id_index.remove(real_id);
-		merged_real_id_index.put(real_id, node_id);
+		if (merged_real_id_index.containsKey(real_id)) {
+			merged_real_id_index.put(node_id, node_id);
+			merged_map_id_to_real_id.put(node_id, node_id);
+		} else {
+			merged_real_id_index.put(real_id, node_id);
+		}
 		List<NodeAdapter> children = merged_map.getNodeFromID(node_id).getChildren();
 		for (NodeAdapter child : children) {
 			moveSubtree(child.getObjectId(merged_map), real_id_index);

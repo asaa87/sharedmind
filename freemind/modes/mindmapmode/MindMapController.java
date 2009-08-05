@@ -2148,12 +2148,15 @@ freemind.main.Resources.getInstance().logException(					e1);
 		actionFactory = new SharingActionFactory(getController());
 	    compound = new CompoundActionHandler(this);
 	    createStandardActions();
+	    setAllActions(true);
+	    
 	}
 	
 	public void stopSharingMap() {
 		actionFactory = new ActionFactory(getController());
 	    compound = new CompoundActionHandler(this);
 	    createStandardActions();
+	    setAllActions(true);
 	}
 	
 	public void markAsMergingMap(MergedMap merged_map) {
