@@ -275,5 +275,13 @@ public class SharingWindow extends javax.swing.JFrame {
 	public void propagateFoldActionEnabled(boolean b) {
 		this.propagateFoldActionCheckbox.setEnabled(b);
 	}
+
+	public void startCheckpointing() {
+		addChat("----- Start checkpointing -----");
+	}
+
+	public void stopCheckpointing() {
+		addChat("----- Stop checkpointing -----");
+	}
 }
 
