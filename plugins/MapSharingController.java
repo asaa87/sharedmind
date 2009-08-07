@@ -449,10 +449,12 @@ public class MapSharingController {
 	public void startCheckpointing() {
 		checkpoint_in_progress = new Checkpoint(this,
 				last_successful_checkpoint);
+		sharingWindow.startCheckpointing();
 	}
 
 	public void stopCheckpointing() {
 		this.checkpoint_in_progress = null;
+		sharingWindow.stopCheckpointing();
 	}
 
 	public void setLastSuccessfulCheckpoint(
