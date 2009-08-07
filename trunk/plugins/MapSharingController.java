@@ -279,6 +279,7 @@ public class MapSharingController {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		mmController.save();
 		checkpoint_list = new CheckpointList(this);
 		this.shareMap();
 	}
@@ -553,10 +554,11 @@ public class MapSharingController {
 //		MindMapController common_map_controller = (MindMapController) mmController
 //				.getMode().createModeController();
 //		new MindMapMapModel(mmController.getFrame(), common_map_controller);
+		log.debug(local_map.toString());
+		log.debug(current_map.toString());
 		try {
 			local_map_controller.getModel().load(local_map);
-			current_map_controller.getModel().load(
-					mmController.getModel().getFile().toURI().toURL());
+			current_map_controller.getModel().load(current_map);
 			mergeMap(local_map_controller, current_map_controller);
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
@@ -603,7 +605,8 @@ public class MapSharingController {
 			System.out.println(merged_map.getConflictList().getList().toString());
 			if (merged_map.getConflictList().getList().isEmpty()) {
 				sharingWindow.addChat("-------------no conflict--------------");
-				this.sendChangeMap(merged_map.finalizedMergedMap());
+				MindMapController final_map = merged_map.finalizedMergedMap();
+				this.sendChangeMap(final_map);
 			} else {
 				sharingWindow.addChat("-------------conflict--------------");
 				merged_map.showMergingMap();
