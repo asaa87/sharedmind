@@ -656,12 +656,14 @@ public class MapSharingController {
 					(String) mmController.getModel().getRegistry().getAttributes()
 					.getElement("VERSION").getValues().firstElement()));
 		}
+		sharingWindow.propagateFoldActionEnabled(true);
 	}
 	
 	public void stopSharingMap() {
 		if (this.map_shared) {
 			this.map_shared = false;
 			mmController.stopSharingMap();
+			sharingWindow.propagateFoldActionEnabled(false);
 		}
 	}
 
@@ -671,5 +673,9 @@ public class MapSharingController {
 
 	public void onVersionChange(int version) {
 		sharingWindow.setVersion(version);
+	}
+
+	public void setPropagateFoldAction(boolean b) {
+		((SharingActionFactory) mmController.getActionFactory()).setPropagate_folding_action(b);
 	}
 }

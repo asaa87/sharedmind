@@ -3,11 +3,19 @@ package freemind.modes.mindmapmode.actions.xml;
 import java.util.Iterator;
 
 import freemind.controller.Controller;
+import freemind.controller.actions.generated.instance.CompoundAction;
+import freemind.controller.actions.generated.instance.FoldAction;
 
 public class SharingActionFactory extends ActionFactory {
-
+	private boolean propagate_folding_action;
+	
 	public SharingActionFactory(Controller c) {
 		super(c);
+		propagate_folding_action = false;
+	}
+
+	public void setPropagate_folding_action(boolean propagate_folding_action) {
+		this.propagate_folding_action = propagate_folding_action;
 	}
 
 	public boolean remoteExecuteAction(ActionPair pair) {
@@ -19,8 +27,15 @@ public class SharingActionFactory extends ActionFactory {
 	        return false;
 	    boolean returnValue = true;
 	    ActionPair filteredPair = pair;
-	    if (controller.getMapSharingController()!=null)
-	    	controller.getMapSharingController().addnewAction(pair);
+	    if (controller.getMapSharingController()!=null) {
+	    	boolean isFoldingAction = false;
+	    	if (pair.getDoAction() instanceof CompoundAction &&
+	    			((CompoundAction) pair.getDoAction()).getChoice(0) instanceof FoldAction)
+	    		isFoldingAction = true;
+	    	if (!isFoldingAction || propagate_folding_action) {
+	    		controller.getMapSharingController().addnewAction(pair);
+	    	}
+	    }
 		// first filter:
 		for (Iterator i = registeredFilters.iterator(); i.hasNext();) {
 			ActionFilter filter = (ActionFilter) i.next();

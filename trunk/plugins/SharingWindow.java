@@ -2,6 +2,8 @@ package plugins;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.WindowAdapter;
@@ -37,6 +39,7 @@ public class SharingWindow extends javax.swing.JFrame {
     private javax.swing.JTextArea onlineUserListArea;
     private javax.swing.JTextField topicField;
     private javax.swing.JLabel statusLabel;
+    private javax.swing.JCheckBox propagateFoldActionCheckbox;
 	private final MapSharingController mpc;
     
     public SharingWindow(final MapSharingController mpc) {
@@ -108,6 +111,13 @@ public class SharingWindow extends javax.swing.JFrame {
 			}
         	
         });
+        propagateFoldActionCheckbox.addItemListener(new ItemListener() {
+		
+			@Override
+			public void itemStateChanged(ItemEvent e) {
+				mpc.setPropagateFoldAction(e.getStateChange() == ItemEvent.SELECTED);
+			}
+		});
         final SharingWindow sharing_window = this;
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
@@ -153,6 +163,7 @@ public class SharingWindow extends javax.swing.JFrame {
         sendButton = new javax.swing.JButton();
         mergeFinishedButton = new javax.swing.JButton();
         statusLabel = new javax.swing.JLabel();
+        propagateFoldActionCheckbox = new javax.swing.JCheckBox();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -179,6 +190,10 @@ public class SharingWindow extends javax.swing.JFrame {
         jScrollPane3.setViewportView(onlineUserListArea);
         
         statusLabel.setText("");
+        
+        propagateFoldActionCheckbox.setText("Share folding of node");
+        propagateFoldActionCheckbox.setSelected(false);
+        propagateFoldActionEnabled(false);
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
@@ -201,7 +216,10 @@ public class SharingWindow extends javax.swing.JFrame {
                         .addComponent(unsubscribeButton)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(mergeFinishedButton))
-                    .addComponent(statusLabel)
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(statusLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 450, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(propagateFoldActionCheckbox))
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 470, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -227,7 +245,9 @@ public class SharingWindow extends javax.swing.JFrame {
                     .addComponent(sendButton, javax.swing.GroupLayout.DEFAULT_SIZE, 76, Short.MAX_VALUE)
                     .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 76, Short.MAX_VALUE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(statusLabel)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                		.addComponent(statusLabel)
+                		.addComponent(propagateFoldActionCheckbox))
                 .addContainerGap())
         );
 
@@ -251,5 +271,9 @@ public class SharingWindow extends javax.swing.JFrame {
     	super.dispose();
     	mpc.exitSharing();
     }
+
+	public void propagateFoldActionEnabled(boolean b) {
+		this.propagateFoldActionCheckbox.setEnabled(b);
+	}
 }
 
