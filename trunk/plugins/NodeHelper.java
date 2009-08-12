@@ -22,7 +22,7 @@ public class NodeHelper {
 		targetNode.setFont(originalNode.getFont());
 		targetNode.setHGap(originalNode.getHGap());
 		targetNode.setHistoryInformation(originalNode.getHistoryInformation());
-		targetNode.setLeft(originalNode.isLeft());
+//		targetNode.setLeft(originalNode.isLeft());
 		targetNode.setLink(originalNode.getLink());
 		targetNode.setNoteText(originalNode.getNoteText());
 		targetNode.setShiftY(originalNode.getShiftY());

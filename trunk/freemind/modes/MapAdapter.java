@@ -177,6 +177,7 @@ public abstract class MapAdapter extends DefaultTreeModel implements MindMap {
     
     public void setRoot(MindMapNode root) {
         super.setRoot(root);
+        root.setParent(null);
     }
 
     /**
