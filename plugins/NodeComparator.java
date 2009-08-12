@@ -1,8 +1,11 @@
 package plugins;
 
+import java.util.Vector;
+
 import freemind.modes.MindMapCloud;
 import freemind.modes.MindMapEdge;
 import freemind.modes.MindMapNode;
+import freemind.modes.attributes.Attribute;
 
 public class NodeComparator {
 	/**
@@ -48,8 +51,11 @@ public class NodeComparator {
 				.getBackgroundColor()))
 			return false;
 		// check attributes
-		if (!objectEquals(node1.getAttributes().getAttributes(), node2
-				.getAttributes().getAttributes()))
+		Vector<Attribute> node1_attribute = removePositionAttributes(
+				(Vector<Attribute>) (node1.getAttributes().getAttributes()));
+		Vector<Attribute> node2_attribute = removePositionAttributes(
+				(Vector<Attribute>) (node2.getAttributes().getAttributes()));
+		if (!objectEquals(node1_attribute, node2_attribute))
 			return false;
 		return true;
 	}
@@ -74,5 +80,19 @@ public class NodeComparator {
 					&& cloud1.getWidth() == cloud2.getWidth();
 		}
 		return false;
+	}
+	
+	private static Vector<Attribute> removePositionAttributes(Vector<Attribute> attributes) {
+		Vector<Attribute> return_value = new Vector<Attribute>();
+		for (Attribute attribute : return_value) {
+			if (!(attribute.getName().equals("POSITION") ||
+					attribute.getName().equals("VGAP") ||
+					attribute.getName().equals("HGAP") ||
+					attribute.getName().equals("VSHIFT") ||
+					attribute.getName().equals("FOLDED"))) {
+				return_value.add(attribute);
+			}		
+		}
+		return return_value;
 	}
 }

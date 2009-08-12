@@ -4,17 +4,12 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringWriter;
-import java.io.Writer;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Vector;
-import java.util.Map.Entry;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import app.comms.RcvChannel;
+import org.apache.log4j.Logger;
 
 import plugins.ConflictList.Conflict;
 import plugins.ConflictList.ConflictType;
@@ -22,18 +17,15 @@ import plugins.MapsDiff.ChangeList.Change;
 import plugins.MapsDiff.ChangeList.ChangeType;
 
 import freemind.controller.actions.generated.instance.NewNodeAction;
-import freemind.controller.filter.util.SortedMapVector;
 import freemind.main.XMLParseException;
-import freemind.modes.MindIcon;
 import freemind.modes.MindMapNode;
 import freemind.modes.NodeAdapter;
-import freemind.modes.attributes.NodeAttributeTableModel;
 import freemind.modes.mindmapmode.MindMapController;
 import freemind.modes.mindmapmode.MindMapMapModel;
 import freemind.modes.mindmapmode.MindMapNodeModel;
 
 public class MergedMap {
-	private Log log = LogFactory.getLog(MergedMap.class);
+	private Logger log = Logger.getLogger(MergedMap.class);
 	
 	private enum MapType { V1, V2, MERGED };
 	
@@ -59,6 +51,8 @@ public class MergedMap {
 	
 	private HashMap<String, MindMapNode> v1_nodes;
 	private HashMap<String, MindMapNode> v2_nodes;
+	
+	private HashMap<String, Boolean> node_position_list;
 	
 	/**
 	 * merged map checkpoint will follow v2's checkpoint
@@ -97,6 +91,18 @@ public class MergedMap {
 		this.v1_nodes = MapHelper.getNodeList(this.v1_map.getRootNode());
 		log.debug("get node list v2");
 		this.v2_nodes = MapHelper.getNodeList(this.v2_map.getRootNode());
+		
+		this.node_position_list = new HashMap<String, Boolean>();
+		for (String node_id : this.v1_nodes.keySet()) {
+			MindMapNode node = this.v1_nodes.get(node_id);
+			this.node_position_list.put(node_id, node.isLeft());
+		}
+		for (String node_id : this.v2_nodes.keySet()) {
+			if (!this.node_position_list.containsKey(node_id)) {
+				MindMapNode node = this.v2_nodes.get(node_id);
+				this.node_position_list.put(node_id, node.isLeft());
+			}
+		}
 		
 		this.conflict_list = new ConflictList(base_v1_diff, base_v2_diff, v1_nodes, v2_nodes);
 		this.merged_map_id_to_real_id = new HashMap<String, String>();
@@ -274,16 +280,22 @@ public class MergedMap {
 		log.debug(merged_map_id_to_real_id.toString());
 		final MindMapController final_map = 
 			(MindMapController)mpc.getController().getMode().createModeController();
-		new MindMapMapModel(mpc.getController().getModel().getFrame(), final_map);
+		final MindMapMapModel map_model = new MindMapMapModel(mpc.getController().getModel().getFrame(), final_map);
 		MapHelper.copyAttributeRegistry(v2_map, final_map);
 		MindMapNodeModel merged_root = (MindMapNodeModel) merged_root_node.getChildren().get(0);
+		
 		String real_root_id = merged_map_id_to_real_id.get(merged_root.getObjectId(merged_map));
+		boolean is_left = merged_root.isLeft();
+		if (this.node_position_list.containsKey(real_root_id)) {
+			is_left = this.node_position_list.get(real_root_id).booleanValue();
+		}
+
 		NewNodeAction new_node_action = final_map.newChild.getAddNodeAction(
-				final_map.getRootNode(), 0, real_root_id, merged_root.isLeft());
+				final_map.getRootNode(), 0, real_root_id, is_left);
 		final_map.newChild.act(new_node_action);
 		final_map.getModel().setRoot(final_map.getNodeFromID(real_root_id));
-		NodeHelper.copyNodeAttributes(merged_root, (MindMapNodeModel)final_map.getNodeFromID(real_root_id));
 		restoreMergedMapSubtree(merged_root, (MindMapNodeModel)final_map.getRootNode());
+		
 		return final_map;
 	}
 	
@@ -296,10 +308,13 @@ public class MergedMap {
 			String temp_id = merged_node.getObjectId(merged_map);
 			String real_id = merged_map_id_to_real_id.containsKey(temp_id) ? 
 					merged_map_id_to_real_id.get(temp_id) : temp_id;
+			boolean is_left = merged_root.isLeft();
+			if (this.node_position_list.containsKey(real_id)) {
+					is_left = this.node_position_list.get(real_id).booleanValue();
+			}
 			NewNodeAction new_node_action = final_map.newChild.getAddNodeAction(
-					final_root, i, real_id, merged_node.isLeft());
+					final_root, i, real_id, is_left);
 			final_map.newChild.act(new_node_action);
-			NodeHelper.copyNodeAttributes(merged_node, (MindMapNodeModel)final_map.getNodeFromID(real_id));
 			restoreMergedMapSubtree(merged_node, (MindMapNodeModel)final_root.getChildAt(i));
 		}
 	}

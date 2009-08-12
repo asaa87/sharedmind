@@ -14,14 +14,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.log4j.Logger;
 
-import app.multicast.presence.Presence;
-import app.multicast.presence.PresenceMessage;
-
-//import pl.edu.pjwstk.mteam.pubsub.presence.Presence;
 import plugins.MapsDiff.ChangeList.Change;
+import app.multicast.presence.Presence;
 import freemind.common.XmlBindingTools;
 import freemind.controller.Controller;
 import freemind.controller.MapModuleManager;
@@ -37,7 +33,7 @@ import freemind.modes.mindmapmode.actions.xml.SharingActionFactory;
 import freemind.view.MapModule;
 
 public class MapSharingController {
-	private Log log = LogFactory.getLog(MapSharingController.class);
+	private Logger log = Logger.getLogger(MapSharingController.class);
 	
 	private P2PPSharingLoginWindow loginWindow;
 	private Connection connection;
