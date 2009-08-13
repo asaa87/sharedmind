@@ -194,6 +194,7 @@ public class MapSharingController {
 		StringWriter body = new StringWriter();
 		try {
 			final_merged_map.getMap().getXml(body);
+			log.warn(body.toString());
 		} catch (Exception err) {
 			err.printStackTrace();
 		}
@@ -275,8 +276,8 @@ public class MapSharingController {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		mmController.getModel().setSaved(false);
 		mmController.save();
-		checkpoint_list = new CheckpointList(this);
 		this.shareMap();
 	}
 
@@ -557,6 +558,10 @@ public class MapSharingController {
 		try {
 			local_map_controller.getModel().load(local_map);
 			current_map_controller.getModel().load(current_map);
+			
+			StringWriter fileout = new StringWriter();
+			current_map_controller.getModel().getXml(fileout);
+			log.debug(fileout.toString());
 			mergeMap(local_map_controller, current_map_controller);
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();

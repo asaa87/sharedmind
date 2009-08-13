@@ -1,8 +1,5 @@
 package plugins;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
 
 public class CheckpointList extends ReadOnlyCheckpointList {
     private MapSharingController mpc;
