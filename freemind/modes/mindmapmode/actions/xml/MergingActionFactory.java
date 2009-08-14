@@ -6,6 +6,7 @@ import org.apache.log4j.Logger;
 
 import plugins.MergedMap;
 import freemind.controller.Controller;
+import freemind.controller.actions.generated.instance.CompoundAction;
 import freemind.controller.actions.generated.instance.MoveNodesAction;
 import freemind.controller.actions.generated.instance.NewNodeAction;
 import freemind.controller.actions.generated.instance.XmlAction;
@@ -35,7 +36,8 @@ public class MergingActionFactory extends ActionFactory {
 					this.c.getModeController().getNodeFromID(new_node_action.getNode());
 				merged_map.addNodeToMergedMap(parent.getObjectId(merged_map.getMergedMap()),
 						new_node_action.getNewId());
-			} else if (do_action instanceof MoveNodesAction) {
+			} else if (do_action instanceof CompoundAction &&
+					((CompoundAction) do_action).getChoice(0) instanceof MoveNodesAction) {
 				MoveNodesAction move_nodes_action = (MoveNodesAction) do_action;
 				String node_id = move_nodes_action.getNode();
 				merged_map.moveSubtree(node_id);
