@@ -309,12 +309,21 @@ public class MergedMap {
 			String real_id = merged_map_id_to_real_id.containsKey(temp_id) ? 
 					merged_map_id_to_real_id.get(temp_id) : temp_id;
 			boolean is_left = merged_root.isLeft();
+			if (!merged_real_id_index.containsValue(temp_id) && merged_real_id_index.containsKey(real_id)) {
+				real_id = temp_id;
+			}
 			if (this.node_position_list.containsKey(real_id)) {
 					is_left = this.node_position_list.get(real_id).booleanValue();
 			}
 			NewNodeAction new_node_action = final_map.newChild.getAddNodeAction(
 					final_root, i, real_id, is_left);
-			final_map.newChild.act(new_node_action);
+			try {
+				final_map.newChild.act(new_node_action);
+			} catch (IllegalArgumentException e) {
+				log.error(real_id);
+				log.error(merged_real_id_index.toString());
+				log.error(merged_map_id_to_real_id.toString());
+			}
 			restoreMergedMapSubtree(merged_node, (MindMapNodeModel)final_root.getChildAt(i));
 		}
 	}
@@ -323,29 +332,6 @@ public class MergedMap {
 		if (merged_real_id_index.containsValue(parent)) {
 			merged_map_id_to_real_id.put(new_node_id, new_node_id);
 			merged_real_id_index.put(new_node_id, new_node_id);
-		}
-	}
-	
-	public void moveSubtree(String node_id) {
-		if (!merged_real_id_index.containsValue(node_id)) {
-			HashMap<String, String> real_id_index = 
-				v1_real_id_index.containsValue(node_id) ? v1_real_id_index : v2_real_id_index;
-			moveSubtree(node_id, real_id_index);
-		}
-	}
-	
-	private void moveSubtree(String node_id, HashMap<String, String> real_id_index) {
-		String real_id = merged_map_id_to_real_id.get(node_id);
-		real_id_index.remove(real_id);
-		if (merged_real_id_index.containsKey(real_id)) {
-			merged_real_id_index.put(node_id, node_id);
-			merged_map_id_to_real_id.put(node_id, node_id);
-		} else {
-			merged_real_id_index.put(real_id, node_id);
-		}
-		List<NodeAdapter> children = merged_map.getNodeFromID(node_id).getChildren();
-		for (NodeAdapter child : children) {
-			moveSubtree(child.getObjectId(merged_map), real_id_index);
 		}
 	}
 	
