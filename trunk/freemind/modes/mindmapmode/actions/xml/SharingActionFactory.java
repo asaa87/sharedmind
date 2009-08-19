@@ -19,51 +19,55 @@ public class SharingActionFactory extends ActionFactory {
 	}
 
 	public boolean remoteExecuteAction(ActionPair pair) {
-		return super.executeAction(pair);
+		//synchronized (getController().getMapSharingController().getSynchronousEditingHistory()) {
+			return super.executeAction(pair);
+		//}
 	}
 	
 	public boolean executeAction(ActionPair pair) {
-	    if(pair == null)
-	        return false;
-	    boolean returnValue = true;
-	    ActionPair filteredPair = pair;
-	    if (controller.getMapSharingController()!=null) {
-	    	boolean isFoldingAction = false;
-	    	if (pair.getDoAction() instanceof CompoundAction &&
-	    			((CompoundAction) pair.getDoAction()).getChoice(0) instanceof FoldAction)
-	    		isFoldingAction = true;
-	    	if (!isFoldingAction || propagate_folding_action) {
-	    		controller.getMapSharingController().addnewAction(pair);
-	    	}
-	    }
-		// first filter:
-		for (Iterator i = registeredFilters.iterator(); i.hasNext();) {
-			ActionFilter filter = (ActionFilter) i.next();
-			filteredPair = filter.filterAction(filteredPair);
-		}
-		
-		// register for undo
-		if(undoActionHandler != null)
-		{
-			try {
-				undoActionHandler.executeAction(filteredPair);
-			} catch (Exception e) {
-				freemind.main.Resources.getInstance().logException(e);
-				returnValue = false;
+		//synchronized (getController().getMapSharingController().getSynchronousEditingHistory()) {
+		    if(pair == null)
+		        return false;
+		    boolean returnValue = true;
+		    ActionPair filteredPair = pair;
+		    if (controller.getMapSharingController()!=null) {
+		    	boolean isFoldingAction = false;
+		    	if (pair.getDoAction() instanceof CompoundAction &&
+		    			((CompoundAction) pair.getDoAction()).getChoice(0) instanceof FoldAction)
+		    		isFoldingAction = true;
+		    	if (!isFoldingAction || propagate_folding_action) {
+		    		controller.getMapSharingController().addnewAction(pair);
+		    	}
+		    }
+			// first filter:
+			for (Iterator i = registeredFilters.iterator(); i.hasNext();) {
+				ActionFilter filter = (ActionFilter) i.next();
+				filteredPair = filter.filterAction(filteredPair);
 			}
-		}
-		
-		Object[] aArray = registeredHandler.toArray();
-		for (int i = 0; i < aArray.length; i++) {
-            ActionHandler handler = (ActionHandler) aArray[i];
-			try {
-                handler.executeAction(filteredPair.getDoAction());
-            } catch (Exception e) {
-                freemind.main.Resources.getInstance().logException(e);
-                returnValue = false;
-                // to break or not to break. this is the question here...
-            }
-		}
-		return returnValue;
+			
+			// register for undo
+			if(undoActionHandler != null)
+			{
+				try {
+					undoActionHandler.executeAction(filteredPair);
+				} catch (Exception e) {
+					freemind.main.Resources.getInstance().logException(e);
+					returnValue = false;
+				}
+			}
+			
+			Object[] aArray = registeredHandler.toArray();
+			for (int i = 0; i < aArray.length; i++) {
+	            ActionHandler handler = (ActionHandler) aArray[i];
+				try {
+	                handler.executeAction(filteredPair.getDoAction());
+	            } catch (Exception e) {
+	                freemind.main.Resources.getInstance().logException(e);
+	                returnValue = false;
+	                // to break or not to break. this is the question here...
+	            }
+			}
+			return returnValue;
+		//}
 	}
 }
