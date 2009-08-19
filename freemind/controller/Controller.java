@@ -78,7 +78,6 @@ import javax.swing.JToolBar;
 import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
 
-import plugins.MapSharingController;
 
 import freemind.common.BooleanProperty;
 import freemind.controller.MapModuleManager.MapModuleChangeObserver;
@@ -96,6 +95,7 @@ import freemind.modes.ModesCreator;
 import freemind.modes.attributes.AttributeRegistry;
 import freemind.modes.attributes.AttributeTableLayoutModel;
 import freemind.modes.browsemode.BrowseMode;
+import freemind.modes.mindmapmode.MapSharingControllerInterface;
 import freemind.modes.mindmapmode.attributeactors.AttributeManagerDialog;
 import freemind.preferences.FreemindPropertyListener;
 import freemind.preferences.layout.OptionPanel;
@@ -191,7 +191,7 @@ public class Controller  implements MapModuleChangeObserver {
 	// TODO:
 	// TODO:
 	// TODO:
-	private MapSharingController mpc;
+	private MapSharingControllerInterface mpc;
 
 	// this values better suit at least the test purposes
     private static final String[] zooms = {"25%","50%","75%","100%","150%","200%","300%","400%"};
@@ -1601,18 +1601,18 @@ public class Controller  implements MapModuleChangeObserver {
 	}
 
 	public void registerMapSharingController(
-			MapSharingController mapSharingController) {
+			MapSharingControllerInterface mapSharingController) {
 		this.mpc=mapSharingController;
 		
 	}
 	
-	public MapSharingController getMapSharingController()
+	public MapSharingControllerInterface getMapSharingController()
 	{
 		return this.mpc;
 	}
 
     public void deregisterMapSharingController(
-                    MapSharingController mapSharingController) {
+                    MapSharingControllerInterface mapSharingController) {
         this.mpc = null;
         
     }

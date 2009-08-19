@@ -2,19 +2,19 @@ package freemind.modes.mindmapmode.actions.xml;
 
 import org.apache.log4j.Logger;
 
-import plugins.MergedMap;
 import freemind.controller.Controller;
 import freemind.controller.actions.generated.instance.NewNodeAction;
 import freemind.controller.actions.generated.instance.XmlAction;
 import freemind.modes.NodeAdapter;
+import freemind.modes.mindmapmode.MergedMapInterface;
 
 public class MergingActionFactory extends ActionFactory {
 	private Logger log = Logger.getLogger(MergingActionFactory.class);
 	
-	private MergedMap merged_map;
+	private MergedMapInterface merged_map;
 	private Controller c;
 	
-	public MergingActionFactory(Controller c, MergedMap merged_map) {
+	public MergingActionFactory(Controller c, MergedMapInterface merged_map) {
 		super(c);
 		this.c = c;
 		this.merged_map = merged_map;

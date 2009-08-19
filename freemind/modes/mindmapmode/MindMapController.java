@@ -77,8 +77,6 @@ import javax.swing.text.html.HTMLEditorKit;
 import org.jibx.runtime.IUnmarshallingContext;
 import org.jibx.runtime.JiBXException;
 
-import plugins.MergedMap;
-
 import freemind.common.XmlBindingTools;
 import freemind.controller.MenuBar;
 import freemind.controller.MenuItemEnabledListener;
@@ -143,7 +141,6 @@ import freemind.modes.common.actions.FindAction;
 import freemind.modes.common.actions.NewMapAction;
 import freemind.modes.common.actions.FindAction.FindNextAction;
 import freemind.modes.common.listeners.CommonNodeMouseMotionListener;
-import freemind.modes.common.listeners.MindMapMouseWheelEventHandler;
 import freemind.modes.mindmapmode.actions.AddArrowLinkAction;
 import freemind.modes.mindmapmode.actions.AddLocalLinkAction;
 import freemind.modes.mindmapmode.actions.ApplyPatternAction;
@@ -2159,7 +2156,7 @@ freemind.main.Resources.getInstance().logException(					e1);
 	    setAllActions(true);
 	}
 	
-	public void markAsMergingMap(MergedMap merged_map) {
+	public void markAsMergingMap(MergedMapInterface merged_map) {
 		actionFactory = new MergingActionFactory(getController(), merged_map);
 		compound = new CompoundActionHandler(this);
 		createStandardActions();
