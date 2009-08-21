@@ -1,7 +1,5 @@
 package freemind.modes.mindmapmode.actions.xml;
 
-import org.apache.log4j.Logger;
-
 import freemind.controller.Controller;
 import freemind.controller.actions.generated.instance.NewNodeAction;
 import freemind.controller.actions.generated.instance.XmlAction;
@@ -9,8 +7,6 @@ import freemind.modes.NodeAdapter;
 import freemind.modes.mindmapmode.MergedMapInterface;
 
 public class MergingActionFactory extends ActionFactory {
-	private Logger log = Logger.getLogger(MergingActionFactory.class);
-	
 	private MergedMapInterface merged_map;
 	private Controller c;
 	
@@ -22,8 +18,6 @@ public class MergingActionFactory extends ActionFactory {
 
 	public boolean executeAction (ActionPair pair) {
 		boolean return_value = super.executeAction(pair);
-		log.debug("execute: " + pair.getDoAction().toString());
-		log.debug(return_value);
 		if (return_value) {
 			XmlAction do_action = pair.getDoAction();
 			if (do_action instanceof NewNodeAction) {
