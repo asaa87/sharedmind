@@ -56,7 +56,6 @@
 	<classpathentry kind="lib" path="lib/jibx/jibx-extras.jar"/>
 	<classpathentry kind="lib" path="lib/jibx/jibx-run.jar"/>
 	<classpathentry kind="lib" path="lib/commons-io-1.4.jar"/>
-	<classpathentry kind="lib" path="lib/TreeComm/multitrees.jar"/>
 	<classpathentry kind="lib" path="plugins/sharedmind/lib/TreeComm/multitrees.jar"/>
 	<classpathentry kind="lib" path="plugins/sharedmind/lib/xstream/lib/jdk1.3/xalan-2.7.0.jar"/>
 	<classpathentry kind="lib" path="plugins/sharedmind/lib/xstream/lib/jdk1.3/xercesImpl-2.8.1.jar"/>
