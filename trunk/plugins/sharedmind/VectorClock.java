@@ -66,4 +66,16 @@ public class VectorClock implements Iterable<Map.Entry<String, Integer>>, Clonea
 	public HashMap<String, Integer> getHashMap() {
 		return this.vector_clock;
 	}
+	
+  public boolean isConcurrent(VectorClock vc) {
+	return !(this.happensBefore(vc)) && !(vc.happensBefore(this));
+  }
+  
+  public boolean happensBefore(VectorClock vc) {
+	    for (String user_id : this.vector_clock.keySet()) {
+	    	if (vc.getClock(user_id) < this.vector_clock.get(user_id))
+	    		return false;
+	    }
+	    return true;
+  }
 }
