@@ -1,61 +1,26 @@
 package plugins.sharedmind;
 
-import java.util.Vector;
-import java.util.Map;
 import java.util.Iterator;
+import java.util.Map;
+import java.util.Vector;
 
 import freemind.controller.actions.generated.instance.NodeAction;
-import freemind.modes.mindmapmode.actions.xml.ActionPair;
 
 public class MessageQueue implements Cloneable{
-    public static class Message implements Cloneable{
-        private VectorClock timestamp;
-        private ActionPair action_pair;
-        private String from;
-        
-        public Message(String from, VectorClock timestamp, ActionPair action_pair) {
-            this.from = from;
-            this.timestamp = timestamp;
-            this.action_pair= action_pair;
-        }
-
-        public String getFrom() {
-            return from;
-        }
-        
-        public VectorClock getTimestamp() {
-            return timestamp;
-        }
-
-        public ActionPair getActionPair() {
-            return action_pair;
-        }
-        
-        public Message clone() {
-        	return new Message(this.from, this.timestamp, this.action_pair);
-        }
-    }
-    
-    private Vector<Message> queue;
+    private Vector<SharedAction> queue;
     private VectorClock vector_clock;
     private String user_id;
     private Vector<String> current_participant;
     
     public MessageQueue(String user_id, VectorClock vector_clock) {
-        this.queue = new Vector<Message>();
+        this.queue = new Vector<SharedAction>();
         this.user_id = user_id;
         this.vector_clock = vector_clock;
         this.current_participant = new Vector<String>();
     }
     
-//    public boolean conflicting(Message message) {
-//    	return false;
-////        return this.vector_clock.getClock(user_id) >
-////            message.getTimestamp().getClock(user_id);
-//    }
-    
-    private boolean needDelay(Message message, VectorClock max_vector_clock) {
-        if (message.timestamp.getClock(message.getFrom()) != 
+    private boolean needDelay(SharedAction message, VectorClock max_vector_clock) {
+        if (message.getTimestamp().getClock(message.getFrom()) != 
             max_vector_clock.getClock(message.getFrom()) + 1) {
             return true;
         } else {
@@ -68,8 +33,8 @@ public class MessageQueue implements Cloneable{
         return false;
     }
     
-    public Vector<Message> enqueueAndReturnAllThatCanBeExecuted(Message message) {
-        Vector<Message> return_value = new Vector<Message>();
+    public Vector<SharedAction> enqueueAndReturnAllThatCanBeExecuted(SharedAction message) {
+        Vector<SharedAction> return_value = new Vector<SharedAction>();
         if (needDelay(message, vector_clock)) {
             queue.add(message);
         } else {
@@ -79,9 +44,9 @@ public class MessageQueue implements Cloneable{
             boolean continue_loop = true;
             while (continue_loop) {
                 continue_loop = false;
-                Iterator<Message> iter = queue.iterator();
+                Iterator<SharedAction> iter = queue.iterator();
                 while (iter.hasNext()) {
-                    Message temp = iter.next();
+                    SharedAction temp = iter.next();
                     if (!needDelay(message, max_vector_clock)) {
                         iter.remove();
                         return_value.add(temp);
@@ -99,9 +64,9 @@ public class MessageQueue implements Cloneable{
     }
 
     public boolean editConflicting(String objectId) {
-        for (Message message : queue) {
-            if (message.action_pair.getDoAction() instanceof NodeAction &&
-                objectId.equals(((NodeAction) message.action_pair.getDoAction()).getNode()))
+        for (SharedAction message : queue) {
+            if (message.getActionPair().getDoAction() instanceof NodeAction &&
+                objectId.equals(((NodeAction) message.getActionPair().getDoAction()).getNode()))
                 return true;
         }
         return false;
@@ -129,7 +94,7 @@ public class MessageQueue implements Cloneable{
 	public MessageQueue clone() {
 		MessageQueue clone = new MessageQueue(this.user_id, this.vector_clock);
 		clone.vector_clock = (VectorClock)this.vector_clock.clone();
-		clone.queue = (Vector<Message>)this.queue.clone();
+		clone.queue = (Vector<SharedAction>)this.queue.clone();
 		return clone;
 	}
 	

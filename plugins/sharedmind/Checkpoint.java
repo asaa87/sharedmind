@@ -55,7 +55,7 @@ public class Checkpoint {
 	/**
 	 * Contains local actions after checkpointing started.
 	 */
-	private Vector<MessageQueue.Message> pending_local_actions;
+	private Vector<SharedAction> pending_local_actions;
 
 	/**
 	 * last vector clock received in checkpoint success that is a possible checkpoint
@@ -79,7 +79,7 @@ public class Checkpoint {
 		parent_file = mpc.getController().getModel().getFile().getParentFile();
 		createCheckpointedMap();
         vector_clock = mpc.getMessageQueue().getVectorClock().clone();
-        pending_local_actions = new Vector<MessageQueue.Message>();
+        pending_local_actions = new Vector<SharedAction>();
         success_vector_clock = null;
         success_message_received = null;
         delayed_success_message = new Vector<CheckpointSuccessMessage>();
@@ -107,9 +107,9 @@ public class Checkpoint {
         generate_new_version_number = false;
 	}
 
-	public void addRemoteActions(Vector<MessageQueue.Message> messages) {
+	public void addRemoteActions(Vector<SharedAction> messages) {
 		logger.debug("Add remote actions");
-		for (MessageQueue.Message message : messages) {
+		for (SharedAction message : messages) {
 			map_controller.getActionFactory().executeAction(message.getActionPair());
 			logger.debug("local_vc: " + vector_clock.toString());
 			logger.debug("timestamp: " + message.getTimestamp().toString());
@@ -125,7 +125,7 @@ public class Checkpoint {
 	}
 	
 	public void addLocalAction(VectorClock timestamp, ActionPair pair) {
-		pending_local_actions.add(new MessageQueue.Message(mpc.getNetworkUserId(), timestamp, pair));
+		pending_local_actions.add(new SharedAction(mpc.getNetworkUserId(), timestamp, pair));
 	}
 	
 	/**
@@ -353,7 +353,7 @@ public class Checkpoint {
 		mpc.setLastSuccessfulCheckpoint(this);
         mpc.stopCheckpointing();
         // Publish pending local actions
-		for (MessageQueue.Message entry : pending_local_actions) {
+		for (SharedAction entry : pending_local_actions) {
 			mpc.sendLocalAction(entry.getTimestamp(), entry.getActionPair());
 		}
 		logger.debug("Checkpoint success: " + this.getVersion() + ": " + this.getVectorClock().toString());
@@ -366,7 +366,7 @@ public class Checkpoint {
 	public void checkpointingFail() {
         mpc.stopCheckpointing();
         // Publish pending local actions
-		for (MessageQueue.Message entry : pending_local_actions) {
+		for (SharedAction entry : pending_local_actions) {
 			mpc.sendLocalAction(entry.getTimestamp(), entry.getActionPair());
 		}
         logger.debug("Checkpointing fail");

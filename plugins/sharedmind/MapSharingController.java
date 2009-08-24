@@ -91,6 +91,8 @@ public class MapSharingController implements MapSharingControllerInterface {
 
 	public void addnewAction(ActionPair pair) {
 		message_queue.getVectorClock().incrementClock(connection.getUserName());
+		this.synchronous_editing_history.addToHistory(
+				new SharedAction (connection.getUserName(), message_queue.getVectorClock(), pair));
 		// only send if no checkpointing is in progress
 		if (checkpoint_in_progress == null) {
 			sendLocalAction(message_queue.getVectorClock(), pair);
@@ -127,7 +129,7 @@ public class MapSharingController implements MapSharingControllerInterface {
 		System.out.println("doAction: " + doAction);
 		System.out.println("undoAction: " + undoAction);
 		ActionPair action_pair = new ActionPair(doAction, undoAction);
-		MessageQueue.Message queued_message = new MessageQueue.Message(
+		SharedAction queued_message = new SharedAction(
 				message.sender, timestamp, action_pair);
 		if (doAction instanceof NodeAction && currentlyEditedNode != null) {
 			String node = ((NodeAction) (doAction)).getNode();
@@ -141,14 +143,14 @@ public class MapSharingController implements MapSharingControllerInterface {
 //			ConflictWindow conflict_window = new ConflictWindow(mmController
 //					.getFrame().getJFrame());
 //		} else {
-			Vector<MessageQueue.Message> messages = message_queue
+			Vector<SharedAction> messages = message_queue
 					.enqueueAndReturnAllThatCanBeExecuted(queued_message);
 			// Apply remote action to checkpointed data if checkpointing is in
 			// progress
 			if (checkpoint_in_progress != null) {
 				checkpoint_in_progress.addRemoteActions(messages);
 			}
-			for (MessageQueue.Message current_message : messages) {
+			for (SharedAction current_message : messages) {
 				addToMap(current_message);
 			}
 //		}
@@ -157,11 +159,29 @@ public class MapSharingController implements MapSharingControllerInterface {
 	/* (non-Javadoc)
 	 * @see plugins.sharedmind.MapSharingControllerInterface#addToMap(plugins.sharedmind.MessageQueue.Message)
 	 */
-	public void addToMap(MessageQueue.Message message) {
-		((SharingActionFactory) mmController.getActionFactory())
+	public void addToMap(SharedAction message) {
+		Vector<SharedAction> conflicting = this.synchronous_editing_history.getConflictingChanges(message);
+		if (conflicting.isEmpty()) {
+			((SharingActionFactory) mmController.getActionFactory())
 				.remoteExecuteAction(message.getActionPair());
+		} else {
+			message.setUndoed(true);
+			for (SharedAction cancel_action : conflicting) {
+				if (!cancel_action.isUndoed()) {
+					cancel_action.setUndoed(true);
+					ActionPair undoAction = 
+						new ActionPair(cancel_action.getActionPair().getUndoAction(), 
+								cancel_action.getActionPair().getDoAction());
+					((SharingActionFactory) mmController.getActionFactory())
+						.remoteExecuteAction(undoAction);
+				}
+			}
+			ConflictWindow conflict_window = new ConflictWindow(
+					mmController.getFrame().getJFrame());
+		}
 		message_queue.getVectorClock().adjustWithTimestamp(
 				message.getTimestamp());
+		this.synchronous_editing_history.addToHistory(message);
 		mmController.repaintMap();
 	}
 
