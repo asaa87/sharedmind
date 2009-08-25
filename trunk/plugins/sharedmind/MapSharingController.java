@@ -135,8 +135,7 @@ public class MapSharingController implements MapSharingControllerInterface {
 			String node = ((NodeAction) (doAction)).getNode();
 			System.out.println(node);
 			if (node.equals(currentlyEditedNode.getObjectId(mmController))) {
-				ConflictWindow conflict_window = new ConflictWindow(
-						mmController.getFrame().getJFrame());
+				ConflictWindow.ShowConflictWindow(mmController.getFrame().getJFrame());
 			}
 		}
 //		if (message_queue.conflicting(queued_message)) {
@@ -176,8 +175,7 @@ public class MapSharingController implements MapSharingControllerInterface {
 						.remoteExecuteAction(undoAction);
 				}
 			}
-			ConflictWindow conflict_window = new ConflictWindow(
-					mmController.getFrame().getJFrame());
+			ConflictWindow.ShowConflictWindow(mmController.getFrame().getJFrame());
 		}
 		message_queue.getVectorClock().adjustWithTimestamp(
 				message.getTimestamp());
@@ -345,8 +343,7 @@ public class MapSharingController implements MapSharingControllerInterface {
 		if (selected != null
 				&& message_queue.editConflicting(selected
 						.getObjectId(mmController))) {
-			ConflictWindow conflict_window = new ConflictWindow(mmController
-					.getFrame().getJFrame());
+			ConflictWindow.ShowConflictWindow(mmController.getFrame().getJFrame());
 		}
 		this.currentlyEditedNode = selected;
 	}
