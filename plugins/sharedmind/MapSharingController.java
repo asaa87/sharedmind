@@ -746,6 +746,7 @@ public class MapSharingController implements MapSharingControllerInterface {
 			} else {
 				sharingWindow.addChat("-------------conflict--------------");
 				merged_map.showMergingMap();
+				merged_map.showNextConflict();
 				sharingWindow.setEnableMergeFinishedButton(true);
 			}
 		} catch (XMLParseException e) {
@@ -841,5 +842,9 @@ public class MapSharingController implements MapSharingControllerInterface {
 	 */
 	public SynchronousEditingHistory getSynchronousEditingHistory() {
 		return this.synchronous_editing_history;
+	}
+
+	public boolean showNextConflict() {
+		return this.merged_map.showNextConflict();
 	}
 }

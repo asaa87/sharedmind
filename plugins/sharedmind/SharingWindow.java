@@ -82,8 +82,10 @@ public class SharingWindow extends javax.swing.JFrame {
         });
         mergeFinishedButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				setEnableMergeFinishedButton(false);
-				mpc.onMergeFinished();
+				if (!mpc.showNextConflict()) {
+					setEnableMergeFinishedButton(false);
+					mpc.onMergeFinished();
+				}
 			}
         	
         });
@@ -170,7 +172,7 @@ public class SharingWindow extends javax.swing.JFrame {
         createButton.setText("Create Topic");
         subscribeButton.setText("Connect");
         unsubscribeButton.setText("Disconnect");
-        mergeFinishedButton.setText("Merge Finished");
+        mergeFinishedButton.setText("Show Next Conflict");
         mergeFinishedButton.setEnabled(false);
 
         chatArea.setColumns(20);

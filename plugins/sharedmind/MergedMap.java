@@ -18,6 +18,7 @@ import plugins.sharedmind.MapsDiff.ChangeList.ChangeType;
 
 import freemind.controller.actions.generated.instance.NewNodeAction;
 import freemind.main.XMLParseException;
+import freemind.modes.MindIcon;
 import freemind.modes.MindMapNode;
 import freemind.modes.mindmapmode.MergedMapInterface;
 import freemind.modes.mindmapmode.MindMapController;
@@ -53,6 +54,10 @@ public class MergedMap implements MergedMapInterface {
 	private HashMap<String, MindMapNode> v2_nodes;
 	
 	private HashMap<String, Boolean> node_position_list;
+	private int conflict_shown;
+	
+	// used for displaying conflict
+	private Vector<MindMapNode> conflicting_nodes;
 	
 	/**
 	 * merged map checkpoint will follow v2's checkpoint
@@ -146,34 +151,6 @@ public class MergedMap implements MergedMapInterface {
 				applyChange(MapType.MERGED, change, 2);
 			} else if (change.type == ChangeType.ADDED) {
 				change.type = ChangeType.EDITED;
-			}
-		}
-		
-		HashMap<String, MindMapNode> base_nodes = MapHelper.getNodeList(this.base_map.getRootNode());
-		
-		Vector<Conflict> conflicts = conflict_list.getList();
-		log.debug(conflicts.toString());
-		for (Conflict conflict : conflicts) {
-			if (conflict.type == ConflictType.NODE_DELETED_SUBTREE_MODIFIED ||
-					conflict.type == ConflictType.PARENT_CHANGES_NODE_DELETED) {
-				String id = conflict.id_v1 == null ? conflict.id_v2 : conflict.id_v1;
-				MindMapNode merged = merged_map.getNodeFromID(merged_real_id_index.get(id));
-				MindMapNode v1_or_v2 = merged_map.getNodeFromID(conflict.id_v1 == null ?
-						v1_real_id_index.get(id) : v2_real_id_index.get(id));
-				merged_map.addArrowLinkAction.addLink(merged, v1_or_v2);
-			} else if (conflict.type == ConflictType.DIFFERENT_ATTRIBUTES ||
-					conflict.type == ConflictType.PARENTS_CHANGE) {
-				MindMapNode merged = merged_map.getNodeFromID(merged_real_id_index.get(conflict.id_v1));
-				MindMapNode v1 = merged_map.getNodeFromID(v1_real_id_index.get(conflict.id_v1));
-				MindMapNode v2 = merged_map.getNodeFromID(v2_real_id_index.get(conflict.id_v1));
-				merged_map.addArrowLinkAction.addLink(merged, v1);
-				merged_map.addArrowLinkAction.addLink(merged, v2);
-			} else if (conflict.type == ConflictType.CYCLIC_PARENT){
-				MindMapNode merged = merged_map.getNodeFromID(merged_real_id_index.get(conflict.id_v1)).getParentNode();
-				MindMapNode v1 = merged_map.getNodeFromID(v1_real_id_index.get(conflict.id_v1));
-				MindMapNode v2 = merged_map.getNodeFromID(v2_real_id_index.get(conflict.id_v2));
-				merged_map.addArrowLinkAction.addLink(merged, v1);
-				merged_map.addArrowLinkAction.addLink(merged, v2);
 			}
 		}
 		this.merged_map.markAsMergingMap(this);
@@ -360,6 +337,52 @@ public class MergedMap implements MergedMapInterface {
 		} catch (URISyntaxException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		}
+		this.conflict_shown = 0;
+	}
+	
+	public boolean showNextConflict() {
+		if (this.conflict_shown > 0)
+			removeAdditionalIconFromConflictingNode();
+		
+		if (this.conflict_shown >= conflict_list.getList().size())
+			return false;
+
+		Conflict conflict = conflict_list.getList().get(this.conflict_shown++);
+		this.conflicting_nodes = new Vector<MindMapNode>();
+		
+		if (conflict.type == ConflictType.NODE_DELETED_SUBTREE_MODIFIED ||
+				conflict.type == ConflictType.PARENT_CHANGES_NODE_DELETED) {
+			String id = conflict.id_v1 == null ? conflict.id_v2 : conflict.id_v1;
+			conflicting_nodes.add(merged_map.getNodeFromID(merged_real_id_index.get(id)));
+			conflicting_nodes.add(merged_map.getNodeFromID(conflict.id_v1 == null ?
+					v1_real_id_index.get(id) : v2_real_id_index.get(id)));
+		} else if (conflict.type == ConflictType.DIFFERENT_ATTRIBUTES ||
+				conflict.type == ConflictType.PARENTS_CHANGE) {
+			conflicting_nodes.add(merged_map.getNodeFromID(merged_real_id_index.get(conflict.id_v1)));
+			conflicting_nodes.add(merged_map.getNodeFromID(v1_real_id_index.get(conflict.id_v1)));
+			conflicting_nodes.add(merged_map.getNodeFromID(v2_real_id_index.get(conflict.id_v1)));
+		} else if (conflict.type == ConflictType.CYCLIC_PARENT){
+			conflicting_nodes.add(merged_map.getNodeFromID(merged_real_id_index.get(conflict.id_v1)).getParentNode());
+			conflicting_nodes.add(merged_map.getNodeFromID(v1_real_id_index.get(conflict.id_v1)));
+			conflicting_nodes.add(merged_map.getNodeFromID(v2_real_id_index.get(conflict.id_v2)));
+		}
+		
+		for (MindMapNode node : conflicting_nodes) {
+			merged_map.addIcon(node, MindIcon.factory("button_cancel"));
+		}
+		
+		return true;
+	}
+	
+	private void removeAdditionalIconFromConflictingNode() {
+		try {
+			for (MindMapNode node : this.conflicting_nodes) {
+				if (node != null)
+					merged_map.removeLastIcon(node);
+			}
+		} catch (IllegalArgumentException e) {
+			
 		}
 	}
 }
