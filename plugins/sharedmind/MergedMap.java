@@ -133,6 +133,9 @@ public class MergedMap implements MergedMapInterface {
 			if (!change.conflicting) {
 				applyChange(MapType.V2, change, 1);
 				applyChange(MapType.MERGED, change, 1);
+			} else if (change.type == ChangeType.ADDED) {
+				applyChange(MapType.MERGED, change, 1);
+				change.type = ChangeType.EDITED;
 			}
 		}
 		changes_list = base_v2_diff.getChangesList().getList();
@@ -141,6 +144,8 @@ public class MergedMap implements MergedMapInterface {
 			if (!change.conflicting) {
 				applyChange(MapType.V1, change, 2);
 				applyChange(MapType.MERGED, change, 2);
+			} else if (change.type == ChangeType.ADDED) {
+				change.type = ChangeType.EDITED;
 			}
 		}
 		
@@ -158,10 +163,6 @@ public class MergedMap implements MergedMapInterface {
 				merged_map.addArrowLinkAction.addLink(merged, v1_or_v2);
 			} else if (conflict.type == ConflictType.DIFFERENT_ATTRIBUTES ||
 					conflict.type == ConflictType.PARENTS_CHANGE) {
-				if (!base_nodes.containsKey(conflict.id_v1)) {
-					Change add_node = new Change(conflict.id_v1, ChangeType.ADDED);
-					applyChange(MapType.MERGED, add_node, 1);
-				}
 				MindMapNode merged = merged_map.getNodeFromID(merged_real_id_index.get(conflict.id_v1));
 				MindMapNode v1 = merged_map.getNodeFromID(v1_real_id_index.get(conflict.id_v1));
 				MindMapNode v2 = merged_map.getNodeFromID(v2_real_id_index.get(conflict.id_v1));
