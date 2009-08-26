@@ -1,9 +1,11 @@
 package plugins.sharedmind;
 
+import java.util.List;
 import java.util.Map;
 
 import javax.swing.ImageIcon;
 
+import freemind.modes.MindIcon;
 import freemind.modes.mindmapmode.MindMapNodeModel;
 
 public class NodeHelper {
@@ -39,5 +41,10 @@ public class NodeHelper {
 		targetNode.setUnderlined(originalNode.isUnderlined());
 		targetNode.setVGap(originalNode.getVGap());
 		targetNode.setXmlNoteText(originalNode.getXmlNoteText());
+		
+		List<MindIcon> icons = (List<MindIcon>) originalNode.getIcons();
+		for (int i = 0; i < icons.size(); ++i) {
+			targetNode.addIcon(icons.get(i), i);
+		}
 	}
 }

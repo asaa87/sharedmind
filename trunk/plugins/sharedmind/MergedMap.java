@@ -378,8 +378,11 @@ public class MergedMap implements MergedMapInterface {
 	private void removeAdditionalIconFromConflictingNode() {
 		try {
 			for (MindMapNode node : this.conflicting_nodes) {
-				if (node != null)
-					merged_map.removeLastIcon(node);
+				if (node != null) {
+					int index = node.getIcons().indexOf(MindIcon.factory("button_cancel"));
+					merged_map.removeLastIconAction.act(
+							merged_map.removeLastIconAction.createRemoveIconXmlAction(node, index));
+				}
 			}
 		} catch (IllegalArgumentException e) {
 			
