@@ -9,5 +9,6 @@ Class-Path: freemind.jar
   bindings.jar
                           SimplyHTML/gnu-regexp-1.1.4.jar
   SimplyHTML/SimplyHTML.jar
+  log4j/
 Created-By: Joerg Mueller
 

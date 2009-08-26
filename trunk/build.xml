@@ -170,6 +170,9 @@
 				<include name="SimplyHTML/jhall.jar"/>
 				<include name="jibx/log4j-1.2.8.jar"/>
 			</fileset>
+			<fileset dir="${src}">
+				<include name="log4j/log4j.properties"/>
+			</fileset>
 		</copy>
 
 		<ant antfile="accessories/plugins/build.xml" target="dist"/>
