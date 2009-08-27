@@ -19,6 +19,7 @@ import plugins.sharedmind.MapsDiff.ChangeList.ChangeType;
 import freemind.controller.actions.generated.instance.NewNodeAction;
 import freemind.main.XMLParseException;
 import freemind.modes.MindIcon;
+import freemind.modes.MindMapLink;
 import freemind.modes.MindMapNode;
 import freemind.modes.mindmapmode.MergedMapInterface;
 import freemind.modes.mindmapmode.MindMapController;
@@ -130,6 +131,9 @@ public class MergedMap implements MergedMapInterface {
 		copyTree(MapType.V1, (MindMapNodeModel)v1_root_node, (MindMapNodeModel)v1_map.getRootNode());
 		copyTree(MapType.V2, (MindMapNodeModel)v2_root_node, (MindMapNodeModel)v2_map.getRootNode());
 		copyTree(MapType.MERGED, (MindMapNodeModel)merged_root_node, (MindMapNodeModel)base_map.getRootNode());
+		copyArrowLinks(MapType.V1, (MindMapNodeModel)v1_root_node.getChildAt(0), (MindMapNodeModel)v1_map.getRootNode());
+		copyArrowLinks(MapType.V2, (MindMapNodeModel)v2_root_node.getChildAt(0), (MindMapNodeModel)v2_map.getRootNode());
+		copyArrowLinks(MapType.MERGED, (MindMapNodeModel)merged_root_node.getChildAt(0), (MindMapNodeModel)base_map.getRootNode());
 		
 		// apply nonconflicting changes
 		Vector<Change> changes_list = base_v1_diff.getChangesList().getList();
@@ -175,7 +179,36 @@ public class MergedMap implements MergedMapInterface {
 		int child_count = original_node.getChildCount();
 		for (int i = 0; i < child_count; ++i) {
 			copyTree(type, temp, (MindMapNodeModel)original_node.getChildAt(i));
+		} 
+	}
+	
+	private void copyArrowLinks(MapType type, MindMapNodeModel version_node, MindMapNodeModel original_node) {
+		MindMapMapModel map_model;
+		HashMap<String, String> real_id_index;
+		if (type == MapType.V1) {
+			map_model = (MindMapMapModel) v1_map.getModel();
+			real_id_index = v1_real_id_index;
+		} else if (type == MapType.V2) {
+			map_model = (MindMapMapModel) v2_map.getModel();
+			real_id_index = v2_real_id_index;
+		} else {
+			map_model = (MindMapMapModel) merged_map.getModel();
+			real_id_index = merged_real_id_index;
 		}
+		
+		Vector<MindMapLink> arrow_links = 
+			(Vector<MindMapLink>) map_model.getLinkRegistry().getAllLinksFromMe(original_node);
+		
+		for (MindMapLink arrow_link : arrow_links) {
+			String target_temp_id = real_id_index.get(
+					arrow_link.getTarget().getObjectId(map_model.getModeController()));
+			merged_map.addLink(version_node, merged_map.getNodeFromID(target_temp_id));
+		}
+			
+		int child_count = original_node.getChildCount();
+		for (int i = 0; i < child_count; ++i) {
+			copyArrowLinks(type, (MindMapNodeModel)version_node.getChildAt(i), (MindMapNodeModel)original_node.getChildAt(i));
+		} 
 	}
 	
 	private void applyChange(MapType changed_map_type, MapsDiff.ChangeList.Change change, int version) {
