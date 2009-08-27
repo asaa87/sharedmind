@@ -3,8 +3,14 @@ package plugins.sharedmind;
 import java.util.HashMap;
 import java.util.Vector;
 
+import freemind.controller.actions.generated.instance.CompoundAction;
+import freemind.controller.actions.generated.instance.CutNodeAction;
+import freemind.controller.actions.generated.instance.DeleteNodeAction;
 import freemind.controller.actions.generated.instance.EditNodeAction;
 import freemind.controller.actions.generated.instance.NodeAction;
+import freemind.controller.actions.generated.instance.XmlAction;
+import freemind.modes.NodeAdapter;
+import freemind.modes.mindmapmode.actions.xml.ActorXml;
 
 /**
  * 
@@ -15,10 +21,12 @@ import freemind.controller.actions.generated.instance.NodeAction;
 public class SynchronousEditingHistory {
     private Vector<SharedAction> history;
     private HashMap<String, SharedAction> last_action_of_participants;
+    private MapSharingController mpc;
     
-	public SynchronousEditingHistory() {
+	public SynchronousEditingHistory(MapSharingController mpc) {
         this.history = new Vector<SharedAction>();
         this.last_action_of_participants = new HashMap<String, SharedAction>();
+        this.mpc = mpc;
 	}
 	
 	public void addToHistory(SharedAction action) {
@@ -58,21 +66,75 @@ public class SynchronousEditingHistory {
 	public Vector<SharedAction> getConflictingChanges(SharedAction shared_action) {
 		Vector<SharedAction> return_value = new Vector<SharedAction> ();
 		Vector<SharedAction> possibleConflictingAction = getPossiblyConflictingChanges(shared_action);
+		System.out.println("Possible conflicting action: " + possibleConflictingAction.toString());
 		for (SharedAction action : possibleConflictingAction) {
-			if (isConflicting(action, shared_action))
+			if (isConflicting(action.getActionPair().getDoAction(), 
+					shared_action.getActionPair().getDoAction()))
 				return_value.add(action);
 		}
+		System.out.println("conflicting actions: " + return_value.toString());
 		return return_value;
 	}
-
-	private boolean isConflicting(SharedAction action,
-			SharedAction shared_action) {
+	
+	private boolean isConflicting(XmlAction action, XmlAction shared_action) {
+		if (action instanceof CompoundAction) {
+			CompoundAction compound = (CompoundAction) action;
+			Object[] actions = compound.getListChoiceList().toArray();
+			for (int i = 0; i < actions.length; i++) {
+			    Object obj = actions[i];
+			    if (obj instanceof XmlAction) {
+	                XmlAction xmlAction = (XmlAction) obj;
+	    			return isConflicting(xmlAction, shared_action);
+	            }
+	        }
+		}
+		
+		if (shared_action instanceof CompoundAction) {
+			CompoundAction compound = (CompoundAction) shared_action;
+			Object[] actions = compound.getListChoiceList().toArray();
+			for (int i = 0; i < actions.length; i++) {
+			    Object obj = actions[i];
+			    if (obj instanceof XmlAction) {
+	                XmlAction xmlAction = (XmlAction) obj;
+	    			return isConflicting(action, xmlAction);
+	            }
+	        }
+		}
+		
 		// Edit conflicting
-		if (action.getActionPair().getDoAction() instanceof EditNodeAction && 
-				shared_action.getActionPair().getDoAction() instanceof EditNodeAction &&
-				((NodeAction) action.getActionPair().getDoAction()).getNode().equals(
-						((NodeAction) shared_action.getActionPair().getDoAction()).getNode())) {
+		if (action instanceof EditNodeAction && 
+				shared_action instanceof EditNodeAction &&
+				((NodeAction) action).getNode().equals(
+						((NodeAction) shared_action).getNode())) {
 			return true;
+		}
+		
+		boolean shared_is_delete = shared_action instanceof DeleteNodeAction 
+				|| shared_action instanceof CutNodeAction;
+		boolean local_is_delete = action instanceof DeleteNodeAction 
+				|| action instanceof CutNodeAction;
+		
+		// Shared action delete subtree that is modified in action
+		if (shared_is_delete && !(local_is_delete)) {
+			if (((NodeAction) shared_action).getNode().equals(((NodeAction) action).getNode()))
+				return true;
+			try {
+				if (MapHelper.isDescendant(
+					mpc.getController().getNodeFromID(((NodeAction) shared_action).getNode()), 
+					mpc.getController().getNodeFromID(((NodeAction) action).getNode())))
+						return true;
+			} catch (IllegalArgumentException e) {
+				return true;
+			}
+		}
+		
+		// Shared action modifies a node that has been deleted
+		if (local_is_delete && !shared_is_delete) {
+			try {
+				mpc.getController().getNodeFromID(((NodeAction)shared_action).getNode());
+			} catch (IllegalArgumentException e) {
+				return true;
+			}
 		}
 		return false;
 	}

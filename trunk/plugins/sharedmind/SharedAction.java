@@ -55,4 +55,8 @@ public class SharedAction implements Cloneable, Comparable<SharedAction> {
 	public boolean isUndoed() {
 		return undoed;
 	}
+	
+	public String toString() {
+		return action_pair.getDoAction().toString() + " " + action_pair.getUndoAction();
+	}
 }
