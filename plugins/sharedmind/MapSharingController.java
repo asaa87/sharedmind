@@ -72,7 +72,7 @@ public class MapSharingController implements MapSharingControllerInterface {
 		this.loginWindow = new P2PPSharingLoginWindow(this);
 		this.connection = null;
 		this.has_map = false;
-		this.synchronous_editing_history = new SynchronousEditingHistory();
+		this.synchronous_editing_history = new SynchronousEditingHistory(this);
 		this.checkpoint_list = new CheckpointList(this);
 		loginWindow.setVisible(true);
 		Presence.setPresenceInterval(60000);
@@ -160,12 +160,14 @@ public class MapSharingController implements MapSharingControllerInterface {
 	 */
 	public void addToMap(SharedAction message) {
 		Vector<SharedAction> conflicting = this.synchronous_editing_history.getConflictingChanges(message);
+		System.out.println("Conflicting changes" + conflicting.toString());
 		if (conflicting.isEmpty()) {
 			((SharingActionFactory) mmController.getActionFactory())
 				.remoteExecuteAction(message.getActionPair());
 		} else {
 			message.setUndoed(true);
 			for (SharedAction cancel_action : conflicting) {
+				System.out.println("cancel" + cancel_action.getActionPair().getDoAction().toString());
 				if (!cancel_action.isUndoed()) {
 					cancel_action.setUndoed(true);
 					ActionPair undoAction = 
