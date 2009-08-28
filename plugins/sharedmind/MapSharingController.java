@@ -300,8 +300,10 @@ public class MapSharingController implements MapSharingControllerInterface {
 		mmController = (MindMapController) controller.getMapModule()
 				.getModeController();
 		VectorClock vector_clock = new VectorClock(content.vector_clock);
+		Vector<String> participants = this.message_queue.getCurrentParticipant();
 		this.message_queue = new MessageQueue(connection.getUserName(),
 				vector_clock);
+		this.message_queue.setCurrentParticipant(participants);
 		this.checkpoint_list = new CheckpointList(this);
 		this.checkpoint_in_progress = null;
 		this.last_successful_checkpoint = null;
