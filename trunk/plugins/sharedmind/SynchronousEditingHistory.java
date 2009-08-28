@@ -3,13 +3,19 @@ package plugins.sharedmind;
 import java.util.HashMap;
 import java.util.Vector;
 
+import org.apache.log4j.Logger;
+import org.apache.log4j.spi.LoggerFactory;
+import org.apache.ws.jaxme.logging.Log4jLoggerFactory;
+
 import freemind.controller.actions.generated.instance.CompoundAction;
 import freemind.controller.actions.generated.instance.CutNodeAction;
 import freemind.controller.actions.generated.instance.DeleteNodeAction;
 import freemind.controller.actions.generated.instance.EditNodeAction;
+import freemind.controller.actions.generated.instance.NewNodeAction;
 import freemind.controller.actions.generated.instance.NodeAction;
 import freemind.controller.actions.generated.instance.XmlAction;
 import freemind.modes.NodeAdapter;
+import freemind.modes.mindmapmode.actions.NewChildAction;
 import freemind.modes.mindmapmode.actions.xml.ActorXml;
 
 /**
@@ -22,20 +28,23 @@ public class SynchronousEditingHistory {
     private Vector<SharedAction> history;
     private HashMap<String, SharedAction> last_action_of_participants;
     private MapSharingController mpc;
+    private Logger log;
     
 	public SynchronousEditingHistory(MapSharingController mpc) {
+		log = Logger.getLogger(this.getClass());
         this.history = new Vector<SharedAction>();
         this.last_action_of_participants = new HashMap<String, SharedAction>();
         this.mpc = mpc;
 	}
 	
-	public void addToHistory(SharedAction action) {
+	public synchronized void addToHistory(SharedAction action) {
 		int i;
 		for (i = 0; i < history.size(); ++i){
 			if (this.history.get(i).compareTo(action) > 0) {
 				break;
 			}	
 		}
+		log.warn("insert to history: " + i + " " + history.size());
 		this.history.insertElementAt(action, i);
 		
 		SharedAction minimal = action;
@@ -44,15 +53,15 @@ public class SynchronousEditingHistory {
 				minimal = shared_action;
 		}
 		
-		if (minimal.getFrom().equals(action.getFrom())) {
+		if (minimal.getFrom().equals(action.getFrom()) && !minimal.getFrom().equals(mpc.getNetworkUserId())) {
 			int minimal_index = this.history.indexOf(minimal);
-			this.history = new Vector<SharedAction>(this.history.subList(minimal_index, this.history.size()));
+//			this.history = new Vector<SharedAction>(this.history.subList(minimal_index, this.history.size()));
 		}
 		
 		this.last_action_of_participants.put(action.getFrom(), action);
 	}
 	
-	public Vector<SharedAction> getPossiblyConflictingChanges(SharedAction shared_action) {
+	private synchronized Vector<SharedAction> getPossiblyConflictingChanges(SharedAction shared_action) {
 		Vector<SharedAction> return_value = new Vector<SharedAction> ();
 		for (int i = 0; i < this.history.size(); ++i) {
 			if (this.history.get(i).getTimestamp().isConcurrent(shared_action.getTimestamp())) {
@@ -63,42 +72,28 @@ public class SynchronousEditingHistory {
 		return return_value;
 	}
 	
-	public Vector<SharedAction> getConflictingChanges(SharedAction shared_action) {
+	public synchronized Vector<SharedAction> getConflictingChanges(SharedAction shared_action) {
 		Vector<SharedAction> return_value = new Vector<SharedAction> ();
 		Vector<SharedAction> possibleConflictingAction = getPossiblyConflictingChanges(shared_action);
-		System.out.println("Possible conflicting action: " + possibleConflictingAction.toString());
+		log.warn("Possible conflicting action: " + possibleConflictingAction.toString());
 		for (SharedAction action : possibleConflictingAction) {
 			if (isConflicting(action.getActionPair().getDoAction(), 
 					shared_action.getActionPair().getDoAction()))
 				return_value.add(action);
 		}
-		System.out.println("conflicting actions: " + return_value.toString());
+		log.warn("conflicting actions: " + return_value.toString());
 		return return_value;
 	}
 	
 	private boolean isConflicting(XmlAction action, XmlAction shared_action) {
 		if (action instanceof CompoundAction) {
 			CompoundAction compound = (CompoundAction) action;
-			Object[] actions = compound.getListChoiceList().toArray();
-			for (int i = 0; i < actions.length; i++) {
-			    Object obj = actions[i];
-			    if (obj instanceof XmlAction) {
-	                XmlAction xmlAction = (XmlAction) obj;
-	    			return isConflicting(xmlAction, shared_action);
-	            }
-	        }
+			return isConflicting(compound, shared_action);
 		}
 		
 		if (shared_action instanceof CompoundAction) {
 			CompoundAction compound = (CompoundAction) shared_action;
-			Object[] actions = compound.getListChoiceList().toArray();
-			for (int i = 0; i < actions.length; i++) {
-			    Object obj = actions[i];
-			    if (obj instanceof XmlAction) {
-	                XmlAction xmlAction = (XmlAction) obj;
-	    			return isConflicting(action, xmlAction);
-	            }
-	        }
+			return isConflicting(action, compound);
 		}
 		
 		// Edit conflicting
@@ -116,26 +111,73 @@ public class SynchronousEditingHistory {
 		
 		// Shared action delete subtree that is modified in action
 		if (shared_is_delete && !(local_is_delete)) {
+			log.warn("remote action is delete");
+			
+			// node deleted by shared action is modified in local
 			if (((NodeAction) shared_action).getNode().equals(((NodeAction) action).getNode()))
 				return true;
+			
+			NodeAdapter local_node, shared_node;
+			
+			// node is deleted in local
 			try {
-				if (MapHelper.isDescendant(
-					mpc.getController().getNodeFromID(((NodeAction) shared_action).getNode()), 
-					mpc.getController().getNodeFromID(((NodeAction) action).getNode())))
-						return true;
+				local_node = mpc.getController().getNodeFromID(((NodeAction) action).getNode());
+			} catch (IllegalArgumentException e) {
+				return false;
+			}
+			
+			// node is deleted in shared
+			try {
+				shared_node = mpc.getController().getNodeFromID(((NodeAction) shared_action).getNode());
 			} catch (IllegalArgumentException e) {
 				return true;
 			}
+			
+			if (MapHelper.isDescendant(shared_node, local_node))
+				return true;
 		}
 		
 		// Shared action modifies a node that has been deleted
 		if (local_is_delete && !shared_is_delete) {
+			log.warn("local action is delete");
 			try {
-				mpc.getController().getNodeFromID(((NodeAction)shared_action).getNode());
+				NodeAdapter remote_node = mpc.getController().getNodeFromID(((NodeAction)shared_action).getNode());
+				if (shared_action instanceof NewNodeAction &&
+						remote_node.getChildCount() < ((NewNodeAction)shared_action).getIndex()) {
+					return true;
+					
+				}
 			} catch (IllegalArgumentException e) {
 				return true;
 			}
+			if (((NodeAction) action).getNode().equals(
+					((NodeAction) shared_action).getNode()))
+					return true;
 		}
+		return false;
+	}
+	
+	private boolean isConflicting(CompoundAction action, XmlAction shared_action) {
+		Object[] actions = action.getListChoiceList().toArray();
+		for (int i = 0; i < actions.length; i++) {
+		    Object obj = actions[i];
+		    if (obj instanceof XmlAction
+		    		&& isConflicting((XmlAction) obj, shared_action)) {
+    			return true;
+            }
+        }
+		return false;
+	}
+	
+	private boolean isConflicting(XmlAction action, CompoundAction shared_action) {
+		Object[] actions = shared_action.getListChoiceList().toArray();
+		for (int i = 0; i < actions.length; i++) {
+		    Object obj = actions[i];
+		    if (obj instanceof XmlAction &&
+		    		isConflicting(action, (XmlAction) obj)) {
+    				return true;
+            }
+        }
 		return false;
 	}
 }

@@ -35,7 +35,7 @@ public class VectorClock implements Iterable<Map.Entry<String, Integer>>, Clonea
         return vector_clock.entrySet().iterator();
     }
     
-    public void incrementClock(String user_id) {
+    public synchronized void incrementClock(String user_id) {
         vector_clock.put(user_id, vector_clock.get(user_id) + 1);
     }
     
@@ -51,7 +51,7 @@ public class VectorClock implements Iterable<Map.Entry<String, Integer>>, Clonea
         return vector_clock.toString();
     }
     
-    public void adjustWithTimestamp(VectorClock timestamp) {
+    public synchronized void adjustWithTimestamp(VectorClock timestamp) {
         for (Entry<String, Integer> entry : timestamp) {
             vector_clock.put(entry.getKey(), Math.max(vector_clock.get(entry.getKey()), entry.getValue()));
         }
@@ -67,11 +67,11 @@ public class VectorClock implements Iterable<Map.Entry<String, Integer>>, Clonea
 		return this.vector_clock;
 	}
 	
-  public boolean isConcurrent(VectorClock vc) {
+  public synchronized boolean isConcurrent(VectorClock vc) {
 	return !(this.happensBefore(vc)) && !(vc.happensBefore(this));
   }
   
-  public boolean happensBefore(VectorClock vc) {
+  public synchronized boolean happensBefore(VectorClock vc) {
 	    for (String user_id : this.vector_clock.keySet()) {
 	    	if (vc.getClock(user_id) < this.vector_clock.get(user_id))
 	    		return false;
