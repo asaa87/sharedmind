@@ -105,4 +105,8 @@ public class MessageQueue implements Cloneable{
 	public void setCurrentParticipant(Vector<String> participants) {
 		this.current_participant = participants;
 	}
+	
+	public Vector<String> getCurrentParticipant() {
+		return this.current_participant;
+	}
 }

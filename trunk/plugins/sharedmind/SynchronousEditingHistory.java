@@ -47,15 +47,24 @@ public class SynchronousEditingHistory {
 		log.warn("insert to history: " + i + " " + history.size());
 		this.history.insertElementAt(action, i);
 		
+		Vector<String> participants = mpc.getMessageQueue().getCurrentParticipant();
+		
 		SharedAction minimal = action;
-		for (SharedAction shared_action : this.last_action_of_participants.values()) {
+		boolean change_minimal = true;
+		log.warn(participants.toString());
+		for (String user_id : participants) {
+			if (!this.last_action_of_participants.containsKey(user_id)) {
+				change_minimal = false;
+				break;
+			}
+			SharedAction shared_action = this.last_action_of_participants.get(user_id);
 			if (shared_action.compareTo(minimal) < 0)
 				minimal = shared_action;
 		}
 		
-		if (minimal.getFrom().equals(action.getFrom()) && !minimal.getFrom().equals(mpc.getNetworkUserId())) {
+		if (change_minimal && action.getFrom().equals(minimal.getFrom())) {
 			int minimal_index = this.history.indexOf(minimal);
-//			this.history = new Vector<SharedAction>(this.history.subList(minimal_index, this.history.size()));
+			this.history = new Vector<SharedAction>(this.history.subList(minimal_index, this.history.size()));
 		}
 		
 		this.last_action_of_participants.put(action.getFrom(), action);
