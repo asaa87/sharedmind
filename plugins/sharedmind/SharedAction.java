@@ -6,14 +6,15 @@ public class SharedAction implements Cloneable, Comparable<SharedAction> {
     private VectorClock timestamp;
 	private ActionPair action_pair;
     private String from;
-    private int sum_of_timestamp;
+    private long sum_of_timestamp;
     private boolean undoed;
 
     public SharedAction(String from, VectorClock timestamp, ActionPair action_pair) {
         this.from = from;
         this.timestamp = timestamp;
         this.action_pair = action_pair;
-        for (int vc : timestamp.vector_clock.values()) {
+        this.sum_of_timestamp = 0;
+        for (int vc : timestamp.getHashMap().values()) {
         	this.sum_of_timestamp += vc;
         }
         this.undoed = false;
@@ -36,27 +37,27 @@ public class SharedAction implements Cloneable, Comparable<SharedAction> {
     }
     
     public SharedAction clone() {
-    	return new SharedAction(this.from, this.timestamp, this.getActionPair());
+    	return new SharedAction(this.from, this.timestamp.clone(), this.getActionPair());
     }
 
 	@Override
 	public int compareTo(SharedAction o) {
 		if (!(this.sum_of_timestamp == o.sum_of_timestamp))
-			return this.sum_of_timestamp - o.sum_of_timestamp;
+			return (new Long(this.sum_of_timestamp)).compareTo(o.sum_of_timestamp);
 		else
 			return this.from.compareTo(o.from);
 		
 	}
 
-	public void setUndoed(boolean undoed) {
+	public synchronized void setUndoed(boolean undoed) {
 		this.undoed = undoed;
 	}
 
-	public boolean isUndoed() {
+	public synchronized boolean isUndoed() {
 		return undoed;
 	}
 	
 	public String toString() {
-		return action_pair.getDoAction().toString() + " " + action_pair.getUndoAction();
+		return sum_of_timestamp + " " + timestamp.toString() + " " + from;
 	}
 }

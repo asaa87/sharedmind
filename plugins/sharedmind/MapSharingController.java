@@ -89,13 +89,13 @@ public class MapSharingController implements MapSharingControllerInterface {
 	 * @see plugins.sharedmind.MapSharingControllerInterface#addnewAction(freemind.modes.mindmapmode.actions.xml.ActionPair)
 	 */
 
-	public void addnewAction(ActionPair pair) {
+	public synchronized void addnewAction(ActionPair pair) {
 		message_queue.getVectorClock().incrementClock(connection.getUserName());
 		this.synchronous_editing_history.addToHistory(
-				new SharedAction (connection.getUserName(), message_queue.getVectorClock(), pair));
+				new SharedAction (connection.getUserName(), message_queue.getVectorClock().clone(), pair));
 		// only send if no checkpointing is in progress
 		if (checkpoint_in_progress == null) {
-			sendLocalAction(message_queue.getVectorClock(), pair);
+			sendLocalAction(message_queue.getVectorClock().clone(), pair);
 		} else {
 			checkpoint_in_progress.addLocalAction(message_queue
 					.getVectorClock().clone(), pair);
@@ -158,23 +158,26 @@ public class MapSharingController implements MapSharingControllerInterface {
 	/* (non-Javadoc)
 	 * @see plugins.sharedmind.MapSharingControllerInterface#addToMap(plugins.sharedmind.MessageQueue.Message)
 	 */
-	public void addToMap(SharedAction message) {
+	public synchronized void addToMap(SharedAction message) {
 		Vector<SharedAction> conflicting = this.synchronous_editing_history.getConflictingChanges(message);
-		System.out.println("Conflicting changes" + conflicting.toString());
 		if (conflicting.isEmpty()) {
 			((SharingActionFactory) mmController.getActionFactory())
 				.remoteExecuteAction(message.getActionPair());
 		} else {
 			message.setUndoed(true);
 			for (SharedAction cancel_action : conflicting) {
-				System.out.println("cancel" + cancel_action.getActionPair().getDoAction().toString());
+				log.warn("cancel" + cancel_action.getActionPair().getDoAction().toString());
 				if (!cancel_action.isUndoed()) {
 					cancel_action.setUndoed(true);
-					ActionPair undoAction = 
-						new ActionPair(cancel_action.getActionPair().getUndoAction(), 
-								cancel_action.getActionPair().getDoAction());
-					((SharingActionFactory) mmController.getActionFactory())
-						.remoteExecuteAction(undoAction);
+					try {
+						ActionPair undoAction = 
+							new ActionPair(cancel_action.getActionPair().getUndoAction(), 
+									cancel_action.getActionPair().getDoAction());
+						((SharingActionFactory) mmController.getActionFactory())
+							.remoteExecuteAction(undoAction);
+					} catch (IllegalArgumentException e) {
+						// log.error(e);
+					}
 				}
 			}
 			ConflictWindow.ShowConflictWindow(mmController.getFrame().getJFrame());
