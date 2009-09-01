@@ -126,8 +126,8 @@ public class MapSharingController implements MapSharingControllerInterface {
 		VectorClock timestamp = new VectorClock(content.timestamp);
 		XmlAction doAction = test.unMarshall(content.doAction);
 		XmlAction undoAction = test.unMarshall(content.undoAction);
-		System.out.println("doAction: " + doAction);
-		System.out.println("undoAction: " + undoAction);
+		log.debug("doAction: " + doAction);
+		log.debug("undoAction: " + undoAction);
 		ActionPair action_pair = new ActionPair(doAction, undoAction);
 		SharedAction queued_message = new SharedAction(
 				message.sender, timestamp, action_pair);
@@ -164,6 +164,7 @@ public class MapSharingController implements MapSharingControllerInterface {
 			((SharingActionFactory) mmController.getActionFactory())
 				.remoteExecuteAction(message.getActionPair());
 		} else {
+			ConflictWindow.ShowConflictWindow(mmController.getFrame().getJFrame());
 			message.setUndoed(true);
 			for (SharedAction cancel_action : conflicting) {
 				log.warn("cancel" + cancel_action.getActionPair().getDoAction().toString());
@@ -180,7 +181,6 @@ public class MapSharingController implements MapSharingControllerInterface {
 					}
 				}
 			}
-			ConflictWindow.ShowConflictWindow(mmController.getFrame().getJFrame());
 		}
 		message_queue.getVectorClock().adjustWithTimestamp(
 				message.getTimestamp());

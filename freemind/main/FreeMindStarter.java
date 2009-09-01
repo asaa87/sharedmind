@@ -69,6 +69,7 @@ public class FreeMindStarter {
 	
 	private static void createUserDirectory(Properties pDefaultProperties) {
 		File userPropertiesFolder = new File(getFreeMindDirectory(pDefaultProperties));
+		File logsFolder = new File("." + File.separator + "logs");
 		try {
 			// create user directory:
 			if (!userPropertiesFolder.exists()) {
@@ -81,6 +82,14 @@ public class FreeMindStarter {
 					.println("Cannot create folder for user properties and logging: '"
 							+ userPropertiesFolder.getAbsolutePath() + "'");
 
+		}
+		
+		try {
+			if (!logsFolder.exists()) {
+				logsFolder.mkdir();
+			}
+		} catch (Exception e) {
+			
 		}
 	}
 
