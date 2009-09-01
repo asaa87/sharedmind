@@ -91,6 +91,32 @@ public class SharingWindow extends javax.swing.JFrame {
 			}
         	
         });
+        
+        messageArea.addKeyListener(new KeyListener() {
+            final javax.swing.JTextArea messageAreaCopy = messageArea;
+
+                    @Override
+                    public void keyPressed(KeyEvent e) {
+                            // TODO Auto-generated method stub
+                            
+                    }
+
+                    @Override
+                    public void keyReleased(KeyEvent e) {
+                            if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                                    mpc.sendChat(messageAreaCopy.getText().trim());
+                                    messageAreaCopy.setText("");
+                            }
+                    }
+
+                    @Override
+                    public void keyTyped(KeyEvent e) {
+                            // TODO Auto-generated method stub
+                            
+                    }
+            
+        });
+
         propagateFoldActionCheckbox.addItemListener(new ItemListener() {
 		
 			@Override
@@ -155,6 +181,7 @@ public class SharingWindow extends javax.swing.JFrame {
         mergeFinishedButton.setEnabled(false);
 
         chatArea.setColumns(20);
+        chatArea.setRows(5);
         chatArea.setEditable(false);
         jScrollPane1.setViewportView(chatArea);
 
