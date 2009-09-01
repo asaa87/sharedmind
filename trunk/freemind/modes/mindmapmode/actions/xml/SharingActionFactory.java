@@ -4,7 +4,11 @@ import java.util.Iterator;
 
 import freemind.controller.Controller;
 import freemind.controller.actions.generated.instance.CompoundAction;
+import freemind.controller.actions.generated.instance.DeleteNodeAction;
 import freemind.controller.actions.generated.instance.FoldAction;
+import freemind.controller.actions.generated.instance.NewNodeAction;
+import freemind.controller.actions.generated.instance.NodeAction;
+import freemind.modes.NodeAdapter;
 
 public class SharingActionFactory extends ActionFactory {
 	private boolean propagate_folding_action;
@@ -18,13 +22,16 @@ public class SharingActionFactory extends ActionFactory {
 		this.propagate_folding_action = propagate_folding_action;
 	}
 
-	public boolean remoteExecuteAction(ActionPair pair) {
-		//synchronized (getController().getMapSharingController().getSynchronousEditingHistory()) {
-			return super.executeAction(pair);
-		//}
+	public synchronized boolean remoteExecuteAction(ActionPair pair) {
+	    if (pair.getDoAction() instanceof NewNodeAction) {
+	    	NewNodeAction new_node_action = (NewNodeAction) pair.getDoAction();
+	    	NodeAdapter parent = controller.getMapSharingController().getController().getNodeFromID(new_node_action.getNode());
+	    	new_node_action.setIndex(Math.min(new_node_action.getIndex(), parent.getChildCount()));
+	    }
+		return super.executeAction(pair);
 	}
 	
-	public boolean executeAction(ActionPair pair) {
+	public synchronized boolean executeAction(ActionPair pair) {
 		//synchronized (getController().getMapSharingController().getSynchronousEditingHistory()) {
 		    if(pair == null)
 		        return false;

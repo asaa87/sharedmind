@@ -74,7 +74,7 @@ public class P2PPSharingLoginWindow extends javax.swing.JFrame {
         portField.setText("");
 
         connectButton.setActionCommand("Connect");
-        connectButton.setLabel("Connect");
+        connectButton.setText("Connect");
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);

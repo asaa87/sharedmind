@@ -4,8 +4,6 @@ import java.util.HashMap;
 import java.util.Vector;
 
 import org.apache.log4j.Logger;
-import org.apache.log4j.spi.LoggerFactory;
-import org.apache.ws.jaxme.logging.Log4jLoggerFactory;
 
 import freemind.controller.actions.generated.instance.CompoundAction;
 import freemind.controller.actions.generated.instance.CutNodeAction;
@@ -15,8 +13,6 @@ import freemind.controller.actions.generated.instance.NewNodeAction;
 import freemind.controller.actions.generated.instance.NodeAction;
 import freemind.controller.actions.generated.instance.XmlAction;
 import freemind.modes.NodeAdapter;
-import freemind.modes.mindmapmode.actions.NewChildAction;
-import freemind.modes.mindmapmode.actions.xml.ActorXml;
 
 /**
  * 
@@ -135,7 +131,7 @@ public class SynchronousEditingHistory {
 				return false;
 			}
 			
-			// node is deleted in shared
+			// node in shared node is already deleted
 			try {
 				shared_node = mpc.getController().getNodeFromID(((NodeAction) shared_action).getNode());
 			} catch (IllegalArgumentException e) {
@@ -146,19 +142,29 @@ public class SynchronousEditingHistory {
 				return true;
 		}
 		
-		// Shared action modifies a node that has been deleted
 		if (local_is_delete && !shared_is_delete) {
 			log.warn("local action is delete");
-			try {
-				NodeAdapter remote_node = mpc.getController().getNodeFromID(((NodeAction)shared_action).getNode());
-				if (shared_action instanceof NewNodeAction &&
-						remote_node.getChildCount() < ((NewNodeAction)shared_action).getIndex()) {
+			
+			// Shared action modifies a node that has been deleted
+			if (((NodeAction) action).getNode().equals(
+					((NodeAction) shared_action).getNode()))
 					return true;
-					
-				}
+			
+			NodeAdapter remote_node;
+			try {
+				remote_node = mpc.getController().getNodeFromID(((NodeAction)shared_action).getNode());
 			} catch (IllegalArgumentException e) {
 				return true;
 			}
+			
+			try {
+				NodeAdapter local_node = mpc.getController().getNodeFromID(((NodeAction) action).getNode());
+				if (shared_action instanceof NewNodeAction &&
+						MapHelper.isDescendant(local_node, remote_node)) {
+					return true;
+					
+				}
+			} catch (IllegalArgumentException e) {	}
 			if (((NodeAction) action).getNode().equals(
 					((NodeAction) shared_action).getNode()))
 					return true;

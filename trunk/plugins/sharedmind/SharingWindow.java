@@ -13,6 +13,8 @@ import java.util.Vector;
 
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.event.CaretEvent;
+import javax.swing.event.CaretListener;
 
 /*
  * SharingWindow.java
@@ -89,30 +91,6 @@ public class SharingWindow extends javax.swing.JFrame {
 			}
         	
         });
-        messageArea.addKeyListener(new KeyListener() {
-        	final javax.swing.JTextArea messageAreaCopy = messageArea;
-
-			@Override
-			public void keyPressed(KeyEvent e) {
-				// TODO Auto-generated method stub
-				
-			}
-
-			@Override
-			public void keyReleased(KeyEvent e) {
-				if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-					mpc.sendChat(messageAreaCopy.getText().trim());
-					messageAreaCopy.setText("");
-				}
-			}
-
-			@Override
-			public void keyTyped(KeyEvent e) {
-				// TODO Auto-generated method stub
-				
-			}
-        	
-        });
         propagateFoldActionCheckbox.addItemListener(new ItemListener() {
 		
 			@Override
@@ -135,6 +113,7 @@ public class SharingWindow extends javax.swing.JFrame {
     
     public void addChat(String chat) {
     	chatArea.append(chat + "\n");
+    	chatArea.setCaretPosition(chatArea.getText().length());
     }
     
     public void setOnlineUserList(Vector<String> user_list) {
@@ -177,7 +156,6 @@ public class SharingWindow extends javax.swing.JFrame {
 
         chatArea.setColumns(20);
         chatArea.setEditable(false);
-        chatArea.setRows(5);
         jScrollPane1.setViewportView(chatArea);
 
         messageArea.setColumns(20);
