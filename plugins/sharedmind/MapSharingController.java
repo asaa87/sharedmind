@@ -89,7 +89,7 @@ public class MapSharingController implements MapSharingControllerInterface {
 	 * @see plugins.sharedmind.MapSharingControllerInterface#addnewAction(freemind.modes.mindmapmode.actions.xml.ActionPair)
 	 */
 
-	public synchronized void addnewAction(ActionPair pair) {
+	public void addnewAction(ActionPair pair) {
 		message_queue.getVectorClock().incrementClock(connection.getUserName());
 		this.synchronous_editing_history.addToHistory(
 				new SharedAction (connection.getUserName(), message_queue.getVectorClock().clone(), pair));
@@ -138,21 +138,16 @@ public class MapSharingController implements MapSharingControllerInterface {
 				ConflictWindow.ShowConflictWindow(mmController.getFrame().getJFrame());
 			}
 		}
-//		if (message_queue.conflicting(queued_message)) {
-//			ConflictWindow conflict_window = new ConflictWindow(mmController
-//					.getFrame().getJFrame());
-//		} else {
-			Vector<SharedAction> messages = message_queue
-					.enqueueAndReturnAllThatCanBeExecuted(queued_message);
-			// Apply remote action to checkpointed data if checkpointing is in
-			// progress
-			if (checkpoint_in_progress != null) {
-				checkpoint_in_progress.addRemoteActions(messages);
-			}
-			for (SharedAction current_message : messages) {
-				addToMap(current_message);
-			}
-//		}
+		Vector<SharedAction> messages = message_queue
+				.enqueueAndReturnAllThatCanBeExecuted(queued_message);
+		// Apply remote action to checkpointed data if checkpointing is in
+		// progress
+		if (checkpoint_in_progress != null) {
+			checkpoint_in_progress.addRemoteActions(messages);
+		}
+		for (SharedAction current_message : messages) {
+			addToMap(current_message);
+		}
 	}
 
 	/* (non-Javadoc)
