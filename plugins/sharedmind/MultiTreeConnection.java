@@ -160,7 +160,7 @@ public class MultiTreeConnection implements Connection {
 			}
 			mpc.setTopic(topicID);
 		} catch (IOException e) {
-			e.printStackTrace();
+			mpc.hideConnectingWindow();
 		}
 	}
 
