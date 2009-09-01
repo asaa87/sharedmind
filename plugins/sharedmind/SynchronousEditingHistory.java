@@ -68,10 +68,9 @@ public class SynchronousEditingHistory {
 	
 	private synchronized Vector<SharedAction> getPossiblyConflictingChanges(SharedAction shared_action) {
 		Vector<SharedAction> return_value = new Vector<SharedAction> ();
-		for (int i = 0; i < this.history.size(); ++i) {
-			if (this.history.get(i).getTimestamp().isConcurrent(shared_action.getTimestamp())) {
-				return_value = new Vector<SharedAction> (this.history.subList(i, this.history.size()));
-				break;
+		for (SharedAction action : this.history) {
+			if (action.getTimestamp().isConcurrent(shared_action.getTimestamp())) {
+				return_value.add(action);
 			}
 		}
 		return return_value;

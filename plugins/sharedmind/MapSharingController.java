@@ -161,7 +161,8 @@ public class MapSharingController implements MapSharingControllerInterface {
 		} else {
 			ConflictWindow.ShowConflictWindow(mmController.getFrame().getJFrame());
 			message.setUndoed(true);
-			for (SharedAction cancel_action : conflicting) {
+			for (int i = conflicting.size() - 1; i >= 0; --i) {
+				SharedAction cancel_action = conflicting.get(i);
 				log.warn("cancel" + cancel_action.getActionPair().getDoAction().toString());
 				if (!cancel_action.isUndoed()) {
 					cancel_action.setUndoed(true);
