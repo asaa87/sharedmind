@@ -427,6 +427,7 @@ public class MapSharingController implements MapSharingControllerInterface {
 	 */
 	public void unsubscribeToTopic() {
 		connection.unsubscribeToTopic();
+		this.sharingWindow.addChat("--- Disconnected ---");
 		this.stopSharingMap();
 		if (last_successful_checkpoint != null) {
 			last_successful_checkpoint.saveCheckpointToFile();
@@ -522,6 +523,7 @@ public class MapSharingController implements MapSharingControllerInterface {
 	 * @see plugins.sharedmind.MapSharingControllerInterface#showGetMapWindow()
 	 */
 	public void showGetMapWindow() {
+		this.sharingWindow.addChat("--- Connected ---");
 		new GetMapWindow(sharingWindow, this);
 	}
 	
@@ -749,8 +751,8 @@ public class MapSharingController implements MapSharingControllerInterface {
 			} else {
 				sharingWindow.addChat("-------------conflict--------------");
 				merged_map.showMergingMap();
-				merged_map.showNextConflict();
-				sharingWindow.setEnableMergeFinishedButton(true);
+				MergingWindow merging_window = 
+					new MergingWindow(mmController.getController().getJFrame(), this);
 			}
 		} catch (XMLParseException e) {
 			e.printStackTrace();
@@ -847,7 +849,23 @@ public class MapSharingController implements MapSharingControllerInterface {
 		return this.synchronous_editing_history;
 	}
 
-	public boolean showNextConflict() {
-		return this.merged_map.showNextConflict();
+	public boolean showConflict(boolean next) {
+		return this.merged_map.showConflict(next);
+	}
+	
+	public boolean markAsResolved() {
+		return this.merged_map.markAsResolved();
+	}
+	
+	public int getNumberOfResolvedConflict() {
+		if (merged_map == null)
+			return -1;
+		return merged_map.getConflictList().getNumberOfResolvedConflicts();
+	}
+	
+	public int getNumberOfConflict() {
+		if (merged_map == null)
+			return -1;
+		return merged_map.getConflictList().getList().size();
 	}
 }
