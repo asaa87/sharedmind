@@ -158,6 +158,7 @@ public class MergedMap implements MergedMapInterface {
 			}
 		}
 		this.merged_map.markAsMergingMap(this);
+		this.conflicting_nodes = new Vector<MindMapNode>();
 	}
 	
 	private void copyTree(MapType type, MindMapNodeModel version_node, MindMapNodeModel original_node) {
@@ -374,14 +375,21 @@ public class MergedMap implements MergedMapInterface {
 		this.conflict_shown = 0;
 	}
 	
-	public boolean showNextConflict() {
-		if (this.conflict_shown > 0)
-			removeAdditionalIconFromConflictingNode();
-		
-		if (this.conflict_shown >= conflict_list.getList().size())
+	public boolean showConflict(boolean next) {
+		removeAdditionalIconFromConflictingNode();
+		if (this.conflict_list.getNumberOfResolvedConflicts() == 
+			this.conflict_list.getList().size())
 			return false;
-
-		Conflict conflict = conflict_list.getList().get(this.conflict_shown++);
+		
+		Conflict conflict = null;
+		int increment = next ? 1 : -1;
+		while (conflict == null || conflict.resolved) {
+			this.conflict_shown = (this.conflict_shown + increment) % 
+					this.conflict_list.getList().size();
+			conflict = conflict_list.getList().get(this.conflict_shown);
+		}
+		
+		
 		this.conflicting_nodes = new Vector<MindMapNode>();
 		
 		if (conflict.type == ConflictType.NODE_DELETED_SUBTREE_MODIFIED ||
@@ -420,5 +428,11 @@ public class MergedMap implements MergedMapInterface {
 		} catch (IllegalArgumentException e) {
 			
 		}
+	}
+	
+	public boolean markAsResolved() {
+		Conflict conflict = this.conflict_list.getList().get(this.conflict_shown);
+		conflict.resolved = true;
+		return this.showConflict(true);
 	}
 }

@@ -21,11 +21,13 @@ public class ConflictList {
 		public String id_v1;
 		public String id_v2;
 		public String common_root;
+		public boolean resolved;
 		
 		public Conflict(ConflictType type, String id_v1, String id_v2) {
 			this.type = type;
 			this.id_v1 = id_v1;
 			this.id_v2 = id_v2;
+			this.resolved = false;
 		}
 	}
 	
@@ -131,5 +133,14 @@ public class ConflictList {
 	
 	public Vector<plugins.sharedmind.ConflictList.Conflict> getList() {
 		return conflict_list;
+	}
+	
+	public int getNumberOfResolvedConflicts() {
+		int i = 0;
+		for (Conflict conflict : conflict_list) {
+			if (conflict.resolved)
+				i++;
+		}
+		return i;
 	}
 }

@@ -31,7 +31,6 @@ public class SharingWindow extends javax.swing.JFrame {
     private javax.swing.JButton subscribeButton;
     private javax.swing.JButton unsubscribeButton;
     private javax.swing.JButton sendButton;
-    private javax.swing.JButton mergeFinishedButton;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
@@ -82,15 +81,6 @@ public class SharingWindow extends javax.swing.JFrame {
 			}
         	
         });
-        mergeFinishedButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				if (!mpc.showNextConflict()) {
-					setEnableMergeFinishedButton(false);
-					mpc.onMergeFinished();
-				}
-			}
-        	
-        });
         
         messageArea.addKeyListener(new KeyListener() {
             final javax.swing.JTextArea messageAreaCopy = messageArea;
@@ -132,11 +122,6 @@ public class SharingWindow extends javax.swing.JFrame {
         });
     }
     
-    public void setEnableMergeFinishedButton(boolean enabled) {
-    	mergeFinishedButton.setEnabled(enabled);
-    	this.repaint();
-    }
-    
     public void addChat(String chat) {
     	chatArea.append(chat + "\n");
     	chatArea.setCaretPosition(chatArea.getText().length());
@@ -168,7 +153,6 @@ public class SharingWindow extends javax.swing.JFrame {
         jScrollPane3 = new javax.swing.JScrollPane();
         onlineUserListArea = new javax.swing.JTextArea();
         sendButton = new javax.swing.JButton();
-        mergeFinishedButton = new javax.swing.JButton();
         statusLabel = new javax.swing.JLabel();
         propagateFoldActionCheckbox = new javax.swing.JCheckBox();
 
@@ -177,8 +161,6 @@ public class SharingWindow extends javax.swing.JFrame {
         createButton.setText("Create Topic");
         subscribeButton.setText("Connect");
         unsubscribeButton.setText("Disconnect");
-        mergeFinishedButton.setText("Show Next Conflict");
-        mergeFinishedButton.setEnabled(false);
 
         chatArea.setColumns(20);
         chatArea.setRows(5);
@@ -220,9 +202,7 @@ public class SharingWindow extends javax.swing.JFrame {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(subscribeButton)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(unsubscribeButton)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(mergeFinishedButton))
+                        .addComponent(unsubscribeButton))
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addComponent(statusLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 450, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
@@ -241,8 +221,7 @@ public class SharingWindow extends javax.swing.JFrame {
                     .addComponent(topicField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
 //                    .addComponent(createButton)
                     .addComponent(subscribeButton)
-                    .addComponent(unsubscribeButton)
-                    .addComponent(mergeFinishedButton))
+                    .addComponent(unsubscribeButton))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 		.addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 179, javax.swing.GroupLayout.PREFERRED_SIZE)
