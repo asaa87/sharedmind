@@ -156,8 +156,36 @@ public class MapSharingController implements MapSharingControllerInterface {
 	public synchronized void addToMap(SharedAction message) {
 		Vector<SharedAction> conflicting = this.synchronous_editing_history.getConflictingChanges(message);
 		if (conflicting.isEmpty()) {
+			
+			Vector<SharedAction> following_actions = 
+					this.synchronous_editing_history.getFollowingActions(message);
+			
+			log.warn(following_actions.toString());
+			// undo actions
+			for (int i = following_actions.size() - 1; i >= 0; --i) {
+				SharedAction cancel_action = following_actions.get(i);
+				try {
+					ActionPair undoAction = 
+						new ActionPair(cancel_action.getActionPair().getUndoAction(), 
+								cancel_action.getActionPair().getDoAction());
+					((SharingActionFactory) mmController.getActionFactory())
+						.remoteExecuteAction(undoAction);
+				} catch (IllegalArgumentException e) {
+					log.error(e);
+				}
+			}
+			// do new action
 			((SharingActionFactory) mmController.getActionFactory())
 				.remoteExecuteAction(message.getActionPair());
+			// redo actions
+			for (SharedAction redo_action : following_actions) {
+				try {
+					((SharingActionFactory) mmController.getActionFactory())
+						.remoteExecuteAction(redo_action.getActionPair());
+				} catch (IllegalArgumentException e) {
+					log.error(e);
+				}
+			}
 		} else {
 			ConflictWindow.ShowConflictWindow(mmController.getFrame().getJFrame());
 			message.setUndoed(true);

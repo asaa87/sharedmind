@@ -161,6 +161,8 @@ public class MultiTreeConnection implements Connection {
 			mpc.setTopic(topicID);
 		} catch (IOException e) {
 			mpc.hideConnectingWindow();
+		} catch (NullPointerException e) {
+			mpc.hideConnectingWindow();
 		}
 	}
 
