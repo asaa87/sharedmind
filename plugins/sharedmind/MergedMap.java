@@ -124,8 +124,8 @@ public class MergedMap implements MergedMapInterface {
 		this.v2_root_node = merged_map.newChild.addNewNode(root_node, root_node.getChildCount());
 		this.merged_root_node = merged_map.newChild.addNewNode(root_node, root_node.getChildCount());
 		
-		v1_root_node.setText("V1");
-		v2_root_node.setText("V2");
+		v1_root_node.setText("My Version");
+		v2_root_node.setText("Shared Version");
 		merged_root_node.setText("Merged");
 		
 		copyTree(MapType.V1, (MindMapNodeModel)v1_root_node, (MindMapNodeModel)v1_map.getRootNode());
