@@ -209,6 +209,9 @@ public class MapSharingController implements MapSharingControllerInterface {
 		message_queue.getVectorClock().adjustWithTimestamp(
 				message.getTimestamp());
 		this.synchronous_editing_history.addToHistory(message);
+		if (message.isUndoed()) {
+			RedoConflictingActionsWindow.showRedoConflictingActionsWindow(mmController.getController().getJFrame(), this);
+		}
 		mmController.repaintMap();
 	}
 

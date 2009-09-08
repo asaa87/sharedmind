@@ -282,4 +282,14 @@ public class SynchronousEditingHistory {
 		
 		return return_value;
 	}
+	
+	public synchronized Vector<SharedAction> getUndoedChanges() {
+		Vector<SharedAction> return_value = new Vector<SharedAction>();
+		for (SharedAction action : history) {
+			if (action.isUndoed()) {
+				return_value.add(action);
+			}
+		}
+		return return_value;
+	}
 }
