@@ -46,28 +46,33 @@ public class SynchronousEditingHistory {
 		}
 		log.warn("insert to history: " + i + " " + history.size());
 		this.history.insertElementAt(action, i);
-		
+		this.last_action_of_participants.put(action.getFrom(), action);
+		clearHistory();
+	}
+	
+	private synchronized void clearHistory () {
+
 		Vector<String> participants = mpc.getMessageQueue().getCurrentParticipant();
-		
-		SharedAction minimal = action;
-		boolean change_minimal = true;
 		log.warn(participants.toString());
+		VectorClock minimal = history.lastElement().getTimestamp().clone();
 		for (String user_id : participants) {
 			if (!this.last_action_of_participants.containsKey(user_id)) {
-				change_minimal = false;
-				break;
+				return;
 			}
-			SharedAction shared_action = this.last_action_of_participants.get(user_id);
-			if (shared_action.compareTo(minimal) < 0)
-				minimal = shared_action;
+			VectorClock timestamp = this.last_action_of_participants.get(user_id).getTimestamp();
+			for (String user_id2 : participants) {
+				minimal.getHashMap().put(user_id2, Math.min(minimal.getClock(user_id2),
+						timestamp.getClock(user_id2)));
+			}
 		}
 		
-		if (change_minimal && action.getFrom().equals(minimal.getFrom())) {
-			int minimal_index = this.history.indexOf(minimal);
-			this.history = new Vector<SharedAction>(this.history.subList(minimal_index, this.history.size()));
+		Vector<SharedAction> to_be_deleted = new Vector<SharedAction>();
+		for (SharedAction shared_action : this.history) {
+			if (shared_action.getTimestamp().happensBefore(minimal))
+				to_be_deleted.add(shared_action);
 		}
 		
-		this.last_action_of_participants.put(action.getFrom(), action);
+		this.history.removeAll(to_be_deleted);
 	}
 	
 	private synchronized Vector<SharedAction> getPossiblyConflictingChanges(SharedAction shared_action) {
@@ -236,7 +241,7 @@ public class SynchronousEditingHistory {
 			}
 			
 			for (SharedAction action : following_actions) {
-				if (needUndo(action.getActionPair(), new_nodes)) {
+				if (!action.isUndoed() && needUndo(action.getActionPair(), new_nodes)) {
 					return_value.add(action);
 				}
 			}

@@ -164,27 +164,19 @@ public class MapSharingController implements MapSharingControllerInterface {
 			// undo actions
 			for (int i = following_actions.size() - 1; i >= 0; --i) {
 				SharedAction cancel_action = following_actions.get(i);
-				try {
-					ActionPair undoAction = 
-						new ActionPair(cancel_action.getActionPair().getUndoAction(), 
-								cancel_action.getActionPair().getDoAction());
-					((SharingActionFactory) mmController.getActionFactory())
-						.remoteExecuteAction(undoAction);
-				} catch (IllegalArgumentException e) {
-					log.error(e);
-				}
+				ActionPair undoAction = 
+					new ActionPair(cancel_action.getActionPair().getUndoAction(), 
+							cancel_action.getActionPair().getDoAction());
+				((SharingActionFactory) mmController.getActionFactory())
+					.remoteExecuteAction(undoAction);
 			}
 			// do new action
 			((SharingActionFactory) mmController.getActionFactory())
 				.remoteExecuteAction(message.getActionPair());
 			// redo actions
 			for (SharedAction redo_action : following_actions) {
-				try {
-					((SharingActionFactory) mmController.getActionFactory())
-						.remoteExecuteAction(redo_action.getActionPair());
-				} catch (IllegalArgumentException e) {
-					log.error(e);
-				}
+				((SharingActionFactory) mmController.getActionFactory())
+					.remoteExecuteAction(redo_action.getActionPair());
 			}
 		} else {
 			ConflictWindow.ShowConflictWindow(mmController.getFrame().getJFrame());
@@ -194,15 +186,11 @@ public class MapSharingController implements MapSharingControllerInterface {
 				log.warn("cancel" + cancel_action.getActionPair().getDoAction().toString());
 				if (!cancel_action.isUndoed()) {
 					cancel_action.setUndoed(true);
-					try {
-						ActionPair undoAction = 
-							new ActionPair(cancel_action.getActionPair().getUndoAction(), 
-									cancel_action.getActionPair().getDoAction());
-						((SharingActionFactory) mmController.getActionFactory())
-							.remoteExecuteAction(undoAction);
-					} catch (IllegalArgumentException e) {
-						// log.error(e);
-					}
+					ActionPair undoAction = 
+						new ActionPair(cancel_action.getActionPair().getUndoAction(), 
+								cancel_action.getActionPair().getDoAction());
+					((SharingActionFactory) mmController.getActionFactory())
+						.remoteExecuteAction(undoAction);
 				}
 			}
 		}
