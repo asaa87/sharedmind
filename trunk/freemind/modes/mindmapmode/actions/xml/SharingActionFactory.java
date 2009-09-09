@@ -37,14 +37,10 @@ public class SharingActionFactory extends ActionFactory {
 		        return false;
 		    boolean returnValue = true;
 		    ActionPair filteredPair = pair;
-		    if (controller.getMapSharingController()!=null) {
-		    	boolean isFoldingAction = false;
-		    	if (pair.getDoAction() instanceof CompoundAction &&
-		    			((CompoundAction) pair.getDoAction()).getChoice(0) instanceof FoldAction)
-		    		isFoldingAction = true;
-		    	if (!isFoldingAction || propagate_folding_action) {
-		    		controller.getMapSharingController().addnewAction(pair);
-		    	}
+		    if (pair.getDoAction() instanceof NewNodeAction) {
+		    	NewNodeAction new_node_action = (NewNodeAction) pair.getDoAction();
+		    	NodeAdapter parent = controller.getMapSharingController().getController().getNodeFromID(new_node_action.getNode());
+		    	new_node_action.setIndex(Math.min(new_node_action.getIndex(), parent.getChildCount()));
 		    }
 			// first filter:
 			for (Iterator i = registeredFilters.iterator(); i.hasNext();) {
@@ -74,6 +70,15 @@ public class SharingActionFactory extends ActionFactory {
 	                // to break or not to break. this is the question here...
 	            }
 			}
+		    if (returnValue && controller.getMapSharingController()!=null) {
+		    	boolean isFoldingAction = false;
+		    	if (pair.getDoAction() instanceof CompoundAction &&
+		    			((CompoundAction) pair.getDoAction()).getChoice(0) instanceof FoldAction)
+		    		isFoldingAction = true;
+		    	if (!isFoldingAction || propagate_folding_action) {
+		    		controller.getMapSharingController().addnewAction(pair);
+		    	}
+		    }
 			return returnValue;
 		//}
 	}

@@ -8,12 +8,14 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Vector;
 
+import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.DefaultCellEditor;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
@@ -79,36 +81,35 @@ public class RedoConflictingActionsWindow {
 		
 		this.panel1 = new JPanel();
 		this.panel1.setLayout(new BoxLayout(this.panel1, BoxLayout.Y_AXIS));
-		this.panel1.setAlignmentX(0);
 		this.panel3 = new JPanel(new FlowLayout());
+		this.panel3.setAlignmentX(Component.LEFT_ALIGNMENT);
+		
+		this.label1 = new JLabel("Local undoed actions:");
+		this.label1.setMinimumSize(new Dimension(350, 20));
+		this.label1.setAlignmentX(Component.LEFT_ALIGNMENT);
+		this.label2 = new JLabel("All undoed actions:");
+		this.label2.setMinimumSize(new Dimension(350, 20));
+		this.label2.setAlignmentX(Component.LEFT_ALIGNMENT);
 		
 		this.local_action_table = new JTable();
 		this.local_action_table.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
-		
-        this.local_action_table.setPreferredScrollableViewportSize(new Dimension(350, 100));
-
-        //Create the scroll pane and add the table to it.
-        JScrollPane scrollPane1 = new JScrollPane(this.local_action_table);
+		this.local_action_table.setPreferredScrollableViewportSize(new Dimension(350, 100));
+		JScrollPane scrollPane1 = new JScrollPane(this.local_action_table);
+		scrollPane1.setAlignmentX(Component.LEFT_ALIGNMENT);
         
 		this.action_table = new JTable();
-		
-        this.action_table.setPreferredScrollableViewportSize(new Dimension(350, 200));
-
-        //Create the scroll pane and add the table to it.
-        JScrollPane scrollPane2 = new JScrollPane(this.action_table);
+		this.action_table.setPreferredScrollableViewportSize(new Dimension(350, 200));
+		JScrollPane scrollPane2 = new JScrollPane(this.action_table);
+		scrollPane2.setAlignmentX(Component.LEFT_ALIGNMENT);
 		
 		this.window.add(this.panel1);
-		this.label1 = new JLabel("Local undoed actions:");
-		this.label1.setMinimumSize(new Dimension(350, 20));
+		this.panel1.add(Box.createRigidArea(new Dimension(0,3)));
 		this.panel1.add(label1);
-		this.label1.setAlignmentX(0);
-		this.label1.setAlignmentY((float) 0.5);
+		this.panel1.add(Box.createRigidArea(new Dimension(0,3)));
 		this.panel1.add(scrollPane1);
-		this.label2 = new JLabel("All undoed actions:");
-		this.label2.setMinimumSize(new Dimension(350, 20));
-		this.label2.setAlignmentX(0);
-		this.label2.setAlignmentY((float) 0.5);
+		this.panel1.add(Box.createRigidArea(new Dimension(0,10)));
 		this.panel1.add(label2);
+		this.panel1.add(Box.createRigidArea(new Dimension(0,3)));
 		this.panel1.add(scrollPane2);
 		this.panel1.add(this.panel3);
 		this.panel3.add(this.check_all_button);
@@ -135,6 +136,15 @@ public class RedoConflictingActionsWindow {
 			if (action.getFrom().equals(mpc.getConnection().getUserName()))
 				this.undoed_local_action.add(action);
 		}
+
+		initializeLocalActionTable();
+		initializeActionTable();
+		
+		this.window.setSize(this.panel1.getLayout().preferredLayoutSize(this.panel1));
+		this.window.setResizable(false);
+	}
+	
+	private void initializeLocalActionTable() {
 		this.local_action_table.setModel(new AbstractTableModel() {
 			public boolean redo[] = new boolean[undoed_local_action.size()];
 			public String column_title[] = { "Redo", "Action" };
@@ -183,7 +193,9 @@ public class RedoConflictingActionsWindow {
 			
 		});
 		TableColumn redo_column = this.local_action_table.getColumnModel().getColumn(0);
-		redo_column.setCellEditor(new DefaultCellEditor(new JCheckBox()));
+		JCheckBox cell_editor = new JCheckBox();
+		cell_editor.setAlignmentX(Component.CENTER_ALIGNMENT);
+		redo_column.setCellEditor(new DefaultCellEditor(cell_editor));
 		redo_column.setCellRenderer(
 				new TableCellRenderer() {
 					// the method gives the component  like whom the cell must be rendered
@@ -192,6 +204,7 @@ public class RedoConflictingActionsWindow {
 							boolean isFocused, int row, int col) {
 						boolean marked = (Boolean) value;
 						JCheckBox rendererComponent = new JCheckBox();
+						rendererComponent.setAlignmentX(Component.CENTER_ALIGNMENT);
 						if (marked) {
 							rendererComponent.setSelected(true);
 						}
@@ -200,9 +213,10 @@ public class RedoConflictingActionsWindow {
 				});
 		this.local_action_table.getColumnModel().getColumn(0).setPreferredWidth(50);
 		this.local_action_table.getColumnModel().getColumn(1).setPreferredWidth(300);
-		
+	}
+	
+	private void initializeActionTable() {
 		this.action_table.setModel(new AbstractTableModel() {
-			public boolean redo[] = new boolean[undoed_action.size()];
 			public String column_title[] = { "User", "Action" };
 			
 			@Override
@@ -237,11 +251,8 @@ public class RedoConflictingActionsWindow {
 		});
 		this.action_table.getColumnModel().getColumn(0).setPreferredWidth(50);
 		this.action_table.getColumnModel().getColumn(1).setPreferredWidth(300);
-		
-		this.window.setSize(this.panel1.getLayout().preferredLayoutSize(this.panel1));
-		this.window.setResizable(false);
 	}
-		
+
 	private void checkAll() {
 		TableModel model = this.local_action_table.getModel();
 		for (int i = 0; i < model.getRowCount(); ++i) {
@@ -252,13 +263,32 @@ public class RedoConflictingActionsWindow {
 	
 	private void onSubmit() {
 		TableModel model = this.local_action_table.getModel();
+		boolean succeed = true;
+		Vector<SharedAction> redone_succeeded = new Vector<SharedAction>();
 		for (int i = 0; i < model.getRowCount(); ++i) {
 			if ((Boolean)model.getValueAt(i, 0)) {
-				mpc.getController().getActionFactory().executeAction(
+				boolean return_value = mpc.getController().getActionFactory().executeAction(
 						((SharedAction) this.undoed_local_action.get(i)).getActionPair());
+				if (return_value) {
+					redone_succeeded.add(this.undoed_local_action.get(i));
+				} else {
+					succeed = false;
+				}
 			}
 		}
-		this.window.setVisible(false);
+		if (!succeed) {
+			JOptionPane.showMessageDialog(this.window, 
+					"Some of the actions you have choosen depends on other actions.", 
+					"Failed Redo", JOptionPane.ERROR_MESSAGE);
+			this.undoed_local_action.removeAll(redone_succeeded);
+			this.undoed_action.removeAll(redone_succeeded);
+			initializeLocalActionTable();
+			initializeActionTable();
+			this.local_action_table.repaint();
+			this.action_table.repaint();
+		} else {
+			this.window.setVisible(false);
+		}
 	}
 	
 	private String getActionDescription(XmlAction action) {
@@ -273,7 +303,7 @@ public class RedoConflictingActionsWindow {
 			XmlAction last_action = (XmlAction) 
 				compoundAction.getChoice(compoundAction.getListChoiceList().size() - 1);
 			if (last_action instanceof NodeAction) {
-				return action.getClass().getSimpleName() + " " + ((NodeAction) last_action).getNode();
+				return last_action.getClass().getSimpleName() + " " + ((NodeAction) last_action).getNode();
 			}
 		}
 		return action.getClass().getSimpleName();
