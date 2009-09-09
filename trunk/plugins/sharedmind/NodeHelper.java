@@ -43,6 +43,8 @@ public class NodeHelper {
 		targetNode.setXmlNoteText(originalNode.getXmlNoteText());
 		
 		List<MindIcon> icons = (List<MindIcon>) originalNode.getIcons();
+		while (targetNode.getIcons().size() > 0)
+			targetNode.removeIcon(0);
 		for (int i = 0; i < icons.size(); ++i) {
 			targetNode.addIcon(icons.get(i), i);
 		}
