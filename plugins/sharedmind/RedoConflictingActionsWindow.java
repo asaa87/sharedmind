@@ -292,20 +292,29 @@ public class RedoConflictingActionsWindow {
 	}
 	
 	private String getActionDescription(XmlAction action) {
+		String class_name = " ";
+		String node_id = "";
+		String node_label = "";
 		if (action instanceof NewNodeAction) {
-			return action.getClass().getSimpleName() + " " + ((NewNodeAction) action).getNewId();
-		}
-		if (action instanceof NodeAction) {
-			return action.getClass().getSimpleName() + " " + ((NodeAction) action).getNode();
-		}
-		if (action instanceof CompoundAction) {
+			class_name = action.getClass().getSimpleName();
+			node_id = ((NewNodeAction) action).getNewId();
+		} else if (action instanceof NodeAction) {
+			class_name = action.getClass().getSimpleName();
+			node_id = ((NodeAction) action).getNode();
+		} else if (action instanceof CompoundAction) {
 			CompoundAction compoundAction = (CompoundAction) action;
 			XmlAction last_action = (XmlAction) 
 				compoundAction.getChoice(compoundAction.getListChoiceList().size() - 1);
 			if (last_action instanceof NodeAction) {
-				return last_action.getClass().getSimpleName() + " " + ((NodeAction) last_action).getNode();
+				class_name = last_action.getClass().getSimpleName();
+				node_id = ((NodeAction) last_action).getNode();
 			}
 		}
-		return action.getClass().getSimpleName();
+		try {
+			node_label = mpc.getController().getNodeFromID(node_id).getPlainTextContent();
+		} catch (IllegalArgumentException e) {
+			// node is not in current map
+		}
+		return class_name + " " + node_id + " : '" + node_label + "'";
 	}
 }
