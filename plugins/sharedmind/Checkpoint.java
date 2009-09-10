@@ -76,7 +76,11 @@ public class Checkpoint {
         this.previous_checkpoint = last_sucessfull_checkpoint;
         // TODO: fix when getFile return null
 		current_filename = mpc.getController().getModel().getFile().getName();
-		parent_file = mpc.getController().getModel().getFile().getParentFile();
+		File parent = mpc.getController().getModel().getFile().getParentFile();
+		parent_file = new File(parent, ".CHECKPOINT");
+		if (!parent_file.exists()) {
+			parent_file.mkdir();
+		}
 		createCheckpointedMap();
         vector_clock = mpc.getMessageQueue().getVectorClock().clone();
         pending_local_actions = new Vector<SharedAction>();
@@ -314,7 +318,7 @@ public class Checkpoint {
 			} else {
 				checkpointed_file = 
 					File.createTempFile("CHECKPOINT_" + current_filename.substring(0, dot_index),
-                        current_filename.substring(dot_index + 1),
+                        "." + current_filename.substring(dot_index + 1),
                         parent_file);
 				mpc.getCheckpointList().addNewCheckpoint(this.getVersion(), checkpointed_file.getAbsolutePath());
 			}
