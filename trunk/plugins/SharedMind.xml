@@ -6,11 +6,12 @@
 	<plugin_classpath jar="sharedmind/lib/*.jar"/>
 	<plugin_classpath jar="sharedmind/lib/jdk1.3/*.jar"/>
 	<plugin_action 
-		documentation="TODO" 
+		documentation="Start SharedMind" 
 		name="Start Collaboration Mode" 
 		base="freemind.extensions.ModeControllerHookAdapter" 
 		label="plugins/SharedMind.xml" 
-		class_name="plugins.sharedmind.MapSharingControllerHook">
+		class_name="plugins.sharedmind.MapSharingControllerHook"
+		key_stroke="alt B">
 		<plugin_mode class_name="freemind.modes.mindmapmode"/>
 		<plugin_menu location="menu_bar/extras/first/collaboration/sharedmind"/>
 	</plugin_action>
