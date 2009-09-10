@@ -40,7 +40,7 @@ public class VectorClock implements Iterable<Map.Entry<String, Integer>>, Clonea
     }
     
     public int getClock(String user_id) {
-        return vector_clock.get(user_id);
+        return vector_clock.get(user_id) == null ? -1 : vector_clock.get(user_id);
     }
     
     public void addCollaborator(String user_id, int clock) {
