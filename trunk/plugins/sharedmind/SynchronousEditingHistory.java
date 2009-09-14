@@ -61,14 +61,8 @@ public class SynchronousEditingHistory {
 			}
 			VectorClock timestamp = this.last_action_of_participants.get(user_id).getTimestamp();
 			for (String user_id2 : participants) {
-				if (!(minimal.getClock(user_id2) == -1 && timestamp.getClock(user_id2) == -1)) {
-					if (minimal.getClock(user_id2) == -1 || timestamp.getClock(user_id2) == -1)
-						minimal.getHashMap().put(user_id2, Math.max(minimal.getClock(user_id2),
-								timestamp.getClock(user_id2)));
-					else 
-						minimal.getHashMap().put(user_id2, Math.min(minimal.getClock(user_id2),
-								timestamp.getClock(user_id2)));
-				}
+				minimal.getHashMap().put(user_id2, Math.min(minimal.getClock(user_id2),
+						timestamp.getClock(user_id2)));
 			}
 		}
 		

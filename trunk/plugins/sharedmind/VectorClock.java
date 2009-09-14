@@ -40,7 +40,8 @@ public class VectorClock implements Iterable<Map.Entry<String, Integer>>, Clonea
     }
     
     public int getClock(String user_id) {
-        return vector_clock.get(user_id) == null ? -1 : vector_clock.get(user_id);
+        return this.vector_clock.containsKey(user_id) ? 
+        		vector_clock.get(user_id) : MessageQueue.getInitialVectorClock(user_id);
     }
     
     public void addCollaborator(String user_id, int clock) {
@@ -67,15 +68,15 @@ public class VectorClock implements Iterable<Map.Entry<String, Integer>>, Clonea
 		return this.vector_clock;
 	}
 	
-  public synchronized boolean isConcurrent(VectorClock vc) {
-	return !(this.happensBefore(vc)) && !(vc.happensBefore(this));
-  }
+    public synchronized boolean isConcurrent(VectorClock vc) {
+    	return !(this.happensBefore(vc)) && !(vc.happensBefore(this));
+    }
   
-  public synchronized boolean happensBefore(VectorClock vc) {
-	    for (String user_id : this.vector_clock.keySet()) {
-	    	if (vc.getClock(user_id) < this.vector_clock.get(user_id))
+    public synchronized boolean happensBefore(VectorClock vc) {
+    	for (String user_id : this.vector_clock.keySet()) {
+	    	if (vc.getClock(user_id) < this.getClock(user_id))
 	    		return false;
 	    }
 	    return true;
-  }
+    }
 }

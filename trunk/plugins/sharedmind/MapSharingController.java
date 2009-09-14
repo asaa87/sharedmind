@@ -123,6 +123,7 @@ public class MapSharingController implements MapSharingControllerInterface {
 		if (!this.map_shared)
 			return;
 		ExecuteMessageContent content = (ExecuteMessageContent) message.content;
+		log.debug("Try add to map: " + content.timestamp);
 		VectorClock timestamp = new VectorClock(content.timestamp);
 		XmlAction doAction = test.unMarshall(content.doAction);
 		XmlAction undoAction = test.unMarshall(content.undoAction);
@@ -154,6 +155,7 @@ public class MapSharingController implements MapSharingControllerInterface {
 	 * @see plugins.sharedmind.MapSharingControllerInterface#addToMap(plugins.sharedmind.MessageQueue.Message)
 	 */
 	public synchronized void addToMap(SharedAction message) {
+		log.debug("Add to map: " + message.getTimestamp().toString());
 		Vector<SharedAction> conflicting = this.synchronous_editing_history.getConflictingChanges(message);
 		if (conflicting.isEmpty()) {
 			

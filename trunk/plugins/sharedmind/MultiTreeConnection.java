@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.log4j.Logger;
 
 import app.multicast.Msg;
@@ -16,6 +18,8 @@ public class MultiTreeConnection implements Connection {
 	private static Logger logger = Logger
 			.getLogger("plugins.MultiTreeConnection");
 
+	private static Log logMoMo = LogFactory.getLog("MoMoAppLog");
+	
 	private MapSharingController mpc;
 	private MulticastComm connection;
 	private String topic;
@@ -37,6 +41,7 @@ public class MultiTreeConnection implements Connection {
 		this.connection.addMsgRcvListener(new MsgRcvListener() {
 		
 			public void msgReceived(Msg message) {
+				logMoMo.warn("Message received: " + message.getId());
 				mpc.processMessage(message.getContents());
 			}
 		
@@ -111,6 +116,7 @@ public class MultiTreeConnection implements Connection {
 
 	// message format is :" sender<sender>message"
 	public void processMessage(String message_string) {
+		logger.warn("message_string");
 		Message message = Message.unmarshall(message_string);
 		if (message.type == Message.MessageType.CHECKPOINTING_SUCCESS) {
 			mpc.checkpointingSuccessReceived(message);
