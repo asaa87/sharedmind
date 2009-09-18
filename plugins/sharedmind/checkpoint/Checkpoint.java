@@ -360,6 +360,7 @@ public class Checkpoint {
         
 		mpc.setLastSuccessfulCheckpoint(this);
         mpc.stopCheckpointing();
+        mpc.clearHistory(this.vector_clock);
         // Publish pending local actions
 		for (SharedAction entry : pending_local_actions) {
 			mpc.sendLocalAction(entry.getTimestamp(), entry.getActionPair());

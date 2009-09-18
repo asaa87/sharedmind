@@ -20,6 +20,8 @@ public interface Connection {
 			HashMap<Integer, String> checkpoint_map_list);
 
 	public void sendCommand(String timestamp, String doAction, String undoAction);
+	
+	public void resendCommand(String original_sender, String timestamp, String doAction, String undoAction);
 
 	public void sendCheckpointingSuccess(String vector_clock,
 			int version_candidate);
@@ -34,4 +36,6 @@ public interface Connection {
 	public void subscribeToTopic(String topicID);
 
 	public void unsubscribeToTopic();
+
+	public void sendRequestRetransmission(String from, int clock_value);
 }

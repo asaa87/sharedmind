@@ -16,6 +16,7 @@ import plugins.sharedmind.messages.ExecuteMessageContent;
 import plugins.sharedmind.messages.GetMapMessageContent;
 import plugins.sharedmind.messages.MapMessageContent;
 import plugins.sharedmind.messages.Message;
+import plugins.sharedmind.messages.RequestRetransmissionMessageContent;
 
 import app.multicast.Msg;
 import app.multicast.MsgRcvListener;
@@ -112,6 +113,16 @@ public class MultiTreeConnection implements Connection {
 		this.connection.send(message.marshall());
 	}
 
+	@Override
+	public void resendCommand(String original_sender, String timestamp,
+			String doAction, String undoAction) {
+		logger.debug(userName + ": Network publish: resend message"
+				+ timestamp + doAction + undoAction);
+		Message message = new Message(Message.MessageType.EXECUTE, original_sender,
+				new ExecuteMessageContent(timestamp, doAction, undoAction));
+		this.connection.send(message.marshall());
+	}
+	
 	public void sendCheckpointingSuccess(String vector_clock,
 			int version_candidate) {
 		logger.debug(userName + ": Checkpointing success");
@@ -122,6 +133,14 @@ public class MultiTreeConnection implements Connection {
 		this.connection.send(message.marshall());
 	}
 
+	@Override
+	public void sendRequestRetransmission(String from, int clock_value) {
+		Message message = new Message(
+				Message.MessageType.REQUEST_RETRANSMISSION, userName,
+				new RequestRetransmissionMessageContent(from, clock_value));
+		this.connection.send(message.marshall());
+	}
+	
 	// message format is :" sender<sender>message"
 	public void processMessage(String message_string) {
 		logger.warn("message_string");
@@ -152,6 +171,9 @@ public class MultiTreeConnection implements Connection {
 		} else if (message.type == Message.MessageType.CHAT) {
 			mpc.addChat(message.sender,
 					((ChatMessageContent) message.content).chat);
+		} else if (message.type == Message.MessageType.REQUEST_RETRANSMISSION) {
+			mpc.handleRetransmissionRequest(message.sender, 
+					((RequestRetransmissionMessageContent)message.content));
 		}
 	}
 
