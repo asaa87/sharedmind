@@ -1,11 +1,14 @@
 package plugins.sharedmind.synchronouscollaboration;
 
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.log4j.Logger;
+
+import plugins.sharedmind.MapSharingController;
 
 import freemind.controller.actions.generated.instance.NodeAction;
 
@@ -18,19 +21,32 @@ public class MessageQueue implements Cloneable{
     private String user_id;
     private Vector<String> current_participant;
     private Logger log;
+    private LostMessages lost_messages;
+    private VectorClock max_vector_clock;
+    private MapSharingController mpc;
     
     public static int getInitialVectorClock(String user_id) {
 		return InitialVectorClock.get(user_id);
     };
     
-    public MessageQueue(String user_id, VectorClock vector_clock) {
+    public MessageQueue(MapSharingController mpc, String user_id, VectorClock vector_clock) {
     	log = Logger.getLogger(this.getClass());
         this.queue = new Vector<SharedAction>();
         this.user_id = user_id;
         this.vector_clock = vector_clock;
         this.current_participant = new Vector<String>();
+        this.lost_messages = new LostMessages();
+        this.max_vector_clock = vector_clock.clone();
+        this.mpc = mpc;
         InitialVectorClock = 
         	new ConcurrentHashMap<String, Integer>(this.vector_clock.getHashMap());
+    }
+    
+    private void updateMaxVectorClock(SharedAction message) {
+    	int current_clock = max_vector_clock.getClock(message.getFrom());
+    	int message_timestamp = message.getTimestamp().getClock(message.getFrom()); 
+    	max_vector_clock.getHashMap().put(message.getFrom(), 
+    			Math.max(current_clock, message_timestamp));
     }
     
     private boolean needDelay(SharedAction message, VectorClock max_vector_clock) {
@@ -52,8 +68,19 @@ public class MessageQueue implements Cloneable{
     
     public synchronized Vector<SharedAction> enqueueAndReturnAllThatCanBeExecuted(SharedAction message) {
         Vector<SharedAction> return_value = new Vector<SharedAction>();
+    	
+        if (discardMessage(message))
+    		return return_value;
+    	
         if (needDelay(message, vector_clock)) {
             queue.add(message);
+            int max_vc = this.max_vector_clock.getClock(message.getFrom());
+            int msg_vc = message.getTimestamp().getClock(message.getFrom());
+            log.warn("max vc: " + max_vector_clock.toString());
+            for (int i = max_vc + 1; i < msg_vc ; ++i) {
+            	this.lost_messages.addLostMessage(message.getFrom(), i);
+            	mpc.sendRequestRetransmissionMessage(message.getFrom(), i);
+            }
         } else {
         	VectorClock max_vector_clock = vector_clock.clone();
             return_value.add(message);
@@ -73,10 +100,26 @@ public class MessageQueue implements Cloneable{
             }
         }
         log.debug(return_value.toString());
+        
+        this.lost_messages.tryRemoveFromLostMessage(message);
+        updateMaxVectorClock(message);
+        
         return return_value;
     }
     
-    public VectorClock getVectorClock() {
+    public synchronized boolean discardMessage(SharedAction message) {
+		if (this.vector_clock.getClock(message.getFrom()) <
+			message.getTimestamp().getClock(message.getFrom())) {
+			return false;
+		} else if (this.lost_messages.isLostMessage(message)) {
+			return false;
+		}
+    	log.warn("message discarded : " + message.getFrom() + " " + 
+    			message.getTimestamp().getClock(message.getFrom()));
+		return true;
+	}
+
+	public VectorClock getVectorClock() {
         return vector_clock;
     }
 
@@ -110,7 +153,7 @@ public class MessageQueue implements Cloneable{
 	}
 	
 	public MessageQueue clone() {
-		MessageQueue clone = new MessageQueue(this.user_id, this.vector_clock);
+		MessageQueue clone = new MessageQueue(this.mpc, this.user_id, this.vector_clock);
 		clone.vector_clock = (VectorClock)this.vector_clock.clone();
 		clone.queue = (Vector<SharedAction>)this.queue.clone();
 		return clone;

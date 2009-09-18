@@ -50,28 +50,12 @@ public class SynchronousEditingHistory {
 		log.warn("insert to history: " + i + " " + history.size());
 		this.history.insertElementAt(action, i);
 		this.last_action_of_participants.put(action.getFrom(), action);
-		clearHistory();
 	}
 	
-	private synchronized void clearHistory () {
-
-		Vector<String> participants = mpc.getMessageQueue().getCurrentParticipant();
-		log.warn(participants.toString());
-		VectorClock minimal = history.lastElement().getTimestamp().clone();
-		for (String user_id : participants) {
-			if (!this.last_action_of_participants.containsKey(user_id)) {
-				return;
-			}
-			VectorClock timestamp = this.last_action_of_participants.get(user_id).getTimestamp();
-			for (String user_id2 : participants) {
-				minimal.getHashMap().put(user_id2, Math.min(minimal.getClock(user_id2),
-						timestamp.getClock(user_id2)));
-			}
-		}
-		
+	public synchronized void clearHistory (VectorClock vector_clock) {
 		Vector<SharedAction> to_be_deleted = new Vector<SharedAction>();
 		for (SharedAction shared_action : this.history) {
-			if (shared_action.getTimestamp().happensBefore(minimal))
+			if (shared_action.getTimestamp().happensBefore(vector_clock))
 				to_be_deleted.add(shared_action);
 		}
 		
@@ -299,5 +283,14 @@ public class SynchronousEditingHistory {
 			}
 		}
 		return return_value;
+	}
+
+	public synchronized SharedAction getMessage(String original_sender, int missing_message) {
+		for (SharedAction action : this.history) {
+			if (action.getFrom().equals(original_sender) &&
+					action.getTimestamp().getClock(original_sender) == missing_message)
+				return action;
+		}
+		return null;
 	}
 }

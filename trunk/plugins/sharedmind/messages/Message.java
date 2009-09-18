@@ -4,7 +4,7 @@ import com.thoughtworks.xstream.XStream;
 
 public class Message {
 	public static enum MessageType {
-		GET_MAP, MAP, EXECUTE, CHECKPOINTING_SUCCESS, CHANGE_MAP, CHAT;
+		GET_MAP, MAP, EXECUTE, CHECKPOINTING_SUCCESS, CHANGE_MAP, CHAT, REQUEST_RETRANSMISSION;
 	};
 	
 	public MessageType type;

@@ -29,6 +29,7 @@ import plugins.sharedmind.messages.ExecuteMessageContent;
 import plugins.sharedmind.messages.GetMapMessageContent;
 import plugins.sharedmind.messages.MapMessageContent;
 import plugins.sharedmind.messages.Message;
+import plugins.sharedmind.messages.RequestRetransmissionMessageContent;
 import plugins.sharedmind.synchronouscollaboration.MessageQueue;
 import plugins.sharedmind.synchronouscollaboration.SharedAction;
 import plugins.sharedmind.synchronouscollaboration.SynchronousEditingHistory;
@@ -342,7 +343,7 @@ public class MapSharingController implements MapSharingControllerInterface {
 				.getModeController();
 		VectorClock vector_clock = new VectorClock(content.vector_clock);
 		Vector<String> participants = this.message_queue.getCurrentParticipant();
-		this.message_queue = new MessageQueue(connection.getUserName(),
+		this.message_queue = new MessageQueue(this, connection.getUserName(),
 				vector_clock);
 		this.message_queue.setCurrentParticipant(participants);
 		this.checkpoint_list = new CheckpointList(this);
@@ -409,7 +410,7 @@ public class MapSharingController implements MapSharingControllerInterface {
 	 */
 	public void initializeMessageQueue() {
 		VectorClock vector_clock = new VectorClock();
-		this.message_queue = new MessageQueue(connection.getUserName(),
+		this.message_queue = new MessageQueue(this, connection.getUserName(),
 				vector_clock);
 		vector_clock.addCollaborator(connection.getUserName(),
 				(int) (Math.random() * Integer.MAX_VALUE));
@@ -912,5 +913,26 @@ public class MapSharingController implements MapSharingControllerInterface {
 		if (merged_map == null)
 			return -1;
 		return merged_map.getConflictList().getList().size();
+	}
+
+	public void handleRetransmissionRequest(String sender,
+			RequestRetransmissionMessageContent message_content) {
+		SharedAction action = this.synchronous_editing_history.getMessage(
+				message_content.original_sender, message_content.missing_message);
+		if (action != null) {
+			connection.resendCommand(action.getFrom(), action.getTimestamp().toString(), 
+					test.marshall(action.getActionPair().getDoAction()), 
+					test.marshall(action.getActionPair().getUndoAction()));
+		}
+		
+	}
+
+	public void sendRequestRetransmissionMessage(String from, int clock_value) {
+		log.warn("request retransmission: " + from + " " + clock_value);
+		connection.sendRequestRetransmission(from, clock_value);
+	}
+
+	public void clearHistory(VectorClock vector_clock) {
+		this.synchronous_editing_history.clearHistory(vector_clock);
 	}
 }
