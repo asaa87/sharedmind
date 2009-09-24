@@ -1,5 +1,6 @@
 package plugins.sharedmind.connection;
 
+import java.awt.Color;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -71,10 +72,10 @@ public class MultiTreeConnection implements Connection {
 		logger.debug(userName + ": Network leave");
 	}
 
-	public void sendChat(String chat) {
+	public void sendChat(String chat, Color color) {
 		logger.debug(userName + ": Network publish: chat message");
 		Message message = new Message(Message.MessageType.CHAT, userName,
-				new ChatMessageContent(chat));
+				new ChatMessageContent(chat, color));
 		this.connection.send(message.marshall());
 	}
 
@@ -170,7 +171,8 @@ public class MultiTreeConnection implements Connection {
 			mpc.tryAddToMap(message);
 		} else if (message.type == Message.MessageType.CHAT) {
 			mpc.addChat(message.sender,
-					((ChatMessageContent) message.content).chat);
+					((ChatMessageContent) message.content).chat,
+					((ChatMessageContent) message.content).color);
 		} else if (message.type == Message.MessageType.REQUEST_RETRANSMISSION) {
 			mpc.handleRetransmissionRequest(message.sender, 
 					((RequestRetransmissionMessageContent)message.content));

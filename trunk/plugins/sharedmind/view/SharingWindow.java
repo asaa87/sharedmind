@@ -1,5 +1,6 @@
 package plugins.sharedmind.view;
 
+import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
@@ -15,6 +16,11 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.event.CaretEvent;
 import javax.swing.event.CaretListener;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.Style;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyleContext;
+import javax.swing.text.StyledDocument;
 
 import plugins.sharedmind.MapSharingController;
 
@@ -33,16 +39,21 @@ public class SharingWindow extends javax.swing.JFrame {
     private javax.swing.JButton subscribeButton;
     private javax.swing.JButton unsubscribeButton;
     private javax.swing.JButton sendButton;
+    private javax.swing.JButton changeColorButton;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane3;
-    private javax.swing.JTextArea chatArea;
+    private javax.swing.JScrollPane jScrollPane4;
+    private javax.swing.JTabbedPane tabbedPane;
+    private javax.swing.JTextPane chatPane;
     private javax.swing.JTextArea messageArea;
     private javax.swing.JTextArea onlineUserListArea;
+    private javax.swing.JTextPane checkpointingPane;
     private javax.swing.JTextField topicField;
     private javax.swing.JLabel statusLabel;
     private javax.swing.JCheckBox propagateFoldActionCheckbox;
+    private ColorChooserDialog colorChooserDialog;
 	private final MapSharingController mpc;
     
     public SharingWindow(final MapSharingController mpc) {
@@ -71,6 +82,14 @@ public class SharingWindow extends javax.swing.JFrame {
         unsubscribeButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				mpc.unsubscribeToTopic();
+			}
+        	
+        });
+        changeColorButton.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				showColorChooserDialog();
 			}
         	
         });
@@ -124,9 +143,38 @@ public class SharingWindow extends javax.swing.JFrame {
         });
     }
     
-    public void addChat(String chat) {
-    	chatArea.append(chat + "\n");
-    	chatArea.setCaretPosition(chatArea.getText().length());
+    protected void showColorChooserDialog() {
+		if (this.colorChooserDialog == null) {
+			this.colorChooserDialog = new ColorChooserDialog(this, this.mpc);
+		}
+		this.colorChooserDialog.showDialog();
+	}
+
+	public void addChat(String chat, Color color) {
+    	StyledDocument doc = chatPane.getStyledDocument();
+    	Style def = StyleContext.getDefaultStyleContext().getStyle( StyleContext.DEFAULT_STYLE );
+    	Style colored = doc.addStyle(null, def);
+    	StyleConstants.setForeground(colored, color);
+    	try {
+			doc.insertString(doc.getLength(), chat + "\n", colored);
+		} catch (BadLocationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    	chatPane.setCaretPosition(chatPane.getDocument().getLength());
+    }
+    
+    private void addCheckpointStatus(String status) {
+    	StyledDocument doc = checkpointingPane.getStyledDocument();
+    	Style def = StyleContext.getDefaultStyleContext().getStyle( StyleContext.DEFAULT_STYLE );
+    	Style regular = doc.addStyle("regular", def);
+    	try {
+			doc.insertString(doc.getLength(), status + "\n", regular);
+		} catch (BadLocationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		checkpointingPane.setCaretPosition(checkpointingPane.getDocument().getLength());
     }
     
     public void setOnlineUserList(Vector<String> user_list) {
@@ -144,16 +192,20 @@ public class SharingWindow extends javax.swing.JFrame {
     private void initComponents() {
 
         jPanel1 = new javax.swing.JPanel();
+        tabbedPane = new javax.swing.JTabbedPane();
         topicField = new javax.swing.JTextField();
         createButton = new javax.swing.JButton();
         subscribeButton = new javax.swing.JButton();
         unsubscribeButton = new javax.swing.JButton();
+        changeColorButton = new javax.swing.JButton();
         jScrollPane1 = new javax.swing.JScrollPane();
-        chatArea = new javax.swing.JTextArea();
+        chatPane = new javax.swing.JTextPane();
         jScrollPane2 = new javax.swing.JScrollPane();
         messageArea = new javax.swing.JTextArea();
         jScrollPane3 = new javax.swing.JScrollPane();
         onlineUserListArea = new javax.swing.JTextArea();
+        jScrollPane4 = new javax.swing.JScrollPane();
+        checkpointingPane = new javax.swing.JTextPane();
         sendButton = new javax.swing.JButton();
         statusLabel = new javax.swing.JLabel();
         propagateFoldActionCheckbox = new javax.swing.JCheckBox();
@@ -163,14 +215,16 @@ public class SharingWindow extends javax.swing.JFrame {
         createButton.setText("Create Topic");
         subscribeButton.setText("Connect");
         unsubscribeButton.setText("Disconnect");
+        changeColorButton.setText("Change Color");
 
-        chatArea.setColumns(20);
-        chatArea.setRows(5);
-        chatArea.setEditable(false);
-        jScrollPane1.setViewportView(chatArea);
+        chatPane.setSize(200, 75);
+        chatPane.setEditable(false);
+        jScrollPane1.setViewportView(chatPane);
 
         messageArea.setColumns(20);
         messageArea.setRows(5);
+        messageArea.setLineWrap(true);
+        messageArea.setWrapStyleWord(true);
         jScrollPane2.setViewportView(messageArea);
 
         sendButton.setText("Send");
@@ -179,6 +233,13 @@ public class SharingWindow extends javax.swing.JFrame {
         onlineUserListArea.setEditable(false);
         onlineUserListArea.setRows(5);
         jScrollPane3.setViewportView(onlineUserListArea);
+        
+        checkpointingPane.setSize(200, 75);
+        checkpointingPane.setEditable(false);
+        jScrollPane4.setViewportView(checkpointingPane);
+        
+        tabbedPane.addTab("Chat", jScrollPane1);
+        tabbedPane.addTab("Checkpointing", jScrollPane4);
         
         statusLabel.setText("");
         
@@ -194,7 +255,7 @@ public class SharingWindow extends javax.swing.JFrame {
                 .addContainerGap()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 	.addGroup(jPanel1Layout.createSequentialGroup()
-                		.addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 470, Short.MAX_VALUE)
+                		.addComponent(tabbedPane, javax.swing.GroupLayout.PREFERRED_SIZE, 470, Short.MAX_VALUE)
                 		.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 		.addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 100, Short.MAX_VALUE))
                     .addGroup(jPanel1Layout.createSequentialGroup()
@@ -204,7 +265,9 @@ public class SharingWindow extends javax.swing.JFrame {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(subscribeButton)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(unsubscribeButton))
+                        .addComponent(unsubscribeButton)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(changeColorButton))
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addComponent(statusLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 450, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
@@ -223,10 +286,11 @@ public class SharingWindow extends javax.swing.JFrame {
                     .addComponent(topicField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
 //                    .addComponent(createButton)
                     .addComponent(subscribeButton)
-                    .addComponent(unsubscribeButton))
+                    .addComponent(unsubscribeButton)
+                    .addComponent(changeColorButton))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                		.addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 179, javax.swing.GroupLayout.PREFERRED_SIZE)
+                		.addComponent(tabbedPane, javax.swing.GroupLayout.PREFERRED_SIZE, 179, javax.swing.GroupLayout.PREFERRED_SIZE)
                 		.addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 179, javax.swing.GroupLayout.PREFERRED_SIZE))  
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -265,11 +329,11 @@ public class SharingWindow extends javax.swing.JFrame {
 	}
 
 	public void startCheckpointing() {
-		addChat("----- Start checkpointing -----");
+		addCheckpointStatus("----- Start checkpointing -----");
 	}
 
 	public void stopCheckpointing() {
-		addChat("----- Stop checkpointing -----");
+		addCheckpointStatus("----- Stop checkpointing -----");
 	}
 }
 
