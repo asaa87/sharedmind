@@ -1,5 +1,6 @@
 package plugins.sharedmind.connection;
 
+import java.awt.Color;
 import java.util.HashMap;
 
 public interface Connection {
@@ -9,7 +10,7 @@ public interface Connection {
 
 	public void closeConnection();
 
-	public void sendChat(String chat);
+	public void sendChat(String chat, Color color);
 
 	public void sendGetMap(String vector_clock);
 

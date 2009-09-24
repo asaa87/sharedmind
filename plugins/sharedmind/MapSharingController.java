@@ -1,5 +1,6 @@
 package plugins.sharedmind;
 
+import java.awt.Color;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -66,6 +67,7 @@ public class MapSharingController implements MapSharingControllerInterface {
 
 	private SharingWindow sharingWindow;
 	private ConnectingWindow connecting_window;
+	private Color chat_color;
 	private MindMapController mmController;
 	private MindMapNode currentlyEditedNode;
 	private MessageQueue message_queue;
@@ -99,6 +101,7 @@ public class MapSharingController implements MapSharingControllerInterface {
 		this.has_map = false;
 		this.synchronous_editing_history = new SynchronousEditingHistory(this);
 		this.checkpoint_list = new CheckpointList(this);
+		this.chat_color = Color.black;
 		loginWindow.setVisible(true);
 		Presence.setPresenceInterval(60000);
 		merged_map = null;
@@ -473,7 +476,7 @@ public class MapSharingController implements MapSharingControllerInterface {
 	 */
 	public void unsubscribeToTopic() {
 		connection.unsubscribeToTopic();
-		this.sharingWindow.addChat("--- Disconnected ---");
+		this.sharingWindow.addChat("--- Disconnected ---", Color.black);
 		this.stopSharingMap();
 		if (last_successful_checkpoint != null) {
 			last_successful_checkpoint.saveCheckpointToFile();
@@ -484,8 +487,8 @@ public class MapSharingController implements MapSharingControllerInterface {
 	 * @see plugins.sharedmind.MapSharingControllerInterface#sendChat(java.lang.String)
 	 */
 	public void sendChat(String chat) {
-		connection.sendChat(chat);
-		addChat("me", chat);
+		connection.sendChat(chat, this.chat_color);
+		addChat("me", chat, this.chat_color);
 		if (chat.startsWith("__test")) {
 			test(chat);
 		}
@@ -494,8 +497,8 @@ public class MapSharingController implements MapSharingControllerInterface {
 	/* (non-Javadoc)
 	 * @see plugins.sharedmind.MapSharingControllerInterface#addChat(java.lang.String, java.lang.String)
 	 */
-	public void addChat(String sender, String message) {
-		sharingWindow.addChat(sender + ": " + message);
+	public void addChat(String sender, String message, Color color) {
+		sharingWindow.addChat(sender + ": " + message, color);
 	}
 
 	/* (non-Javadoc)
@@ -569,7 +572,7 @@ public class MapSharingController implements MapSharingControllerInterface {
 	 * @see plugins.sharedmind.MapSharingControllerInterface#showGetMapWindow()
 	 */
 	public void showGetMapWindow() {
-		this.sharingWindow.addChat("--- Connected ---");
+		this.sharingWindow.addChat("--- Connected ---", Color.black);
 		new GetMapWindow(sharingWindow, this);
 	}
 	
@@ -717,13 +720,13 @@ public class MapSharingController implements MapSharingControllerInterface {
 		MapsDiff diff = merged_map.getMapDiff1();
 		Vector<Change> list = diff.getChangesList().getList();
 		for (Change change : list) {
-			sharingWindow.addChat(change.toString());
+			sharingWindow.addChat(change.toString(), Color.black);
 		}
-		sharingWindow.addChat("-------------");
+		sharingWindow.addChat("-------------", Color.black);
 		diff = merged_map.getMapDiff2();
 		list = diff.getChangesList().getList();
 		for (Change change : list) {
-			sharingWindow.addChat(change.toString());
+			sharingWindow.addChat(change.toString(), Color.black);
 		}
 	}
 
@@ -766,7 +769,7 @@ public class MapSharingController implements MapSharingControllerInterface {
 		try {
 			String common_map = this.getCommonMapFile(local_map_controller,
 					current_map_controller);
-			sharingWindow.addChat(common_map);
+			sharingWindow.addChat(common_map, Color.black);
 			File common_map_file = new File(common_map);
 			common_map_controller.getModel().load(
 					common_map_file.toURI().toURL());
@@ -784,18 +787,18 @@ public class MapSharingController implements MapSharingControllerInterface {
 
 	private void mergeMap(MindMapController common_map_controller, 
 			MindMapController local_map_controller, MindMapController current_map_controller) {
-		sharingWindow.addChat("------------------merging map---------------------");
+		sharingWindow.addChat("------------------merging map---------------------", Color.black);
 		try {
 			last_common_map = current_map_controller;
 			merged_map = new MergedMap(this, common_map_controller,
 					local_map_controller, current_map_controller);
 			System.out.println(merged_map.getConflictList().getList().toString());
 			if (merged_map.getConflictList().getList().isEmpty()) {
-				sharingWindow.addChat("-------------no conflict--------------");
+				sharingWindow.addChat("-------------no conflict--------------", Color.black);
 				MindMapController final_map = merged_map.finalizedMergedMap();
 				this.sendChangeMap(final_map);
 			} else {
-				sharingWindow.addChat("-------------conflict--------------");
+				sharingWindow.addChat("-------------conflict--------------", Color.black);
 				merged_map.showMergingMap();
 				MergingWindow merging_window = 
 					new MergingWindow(mmController.getController().getJFrame(), this);
@@ -934,5 +937,9 @@ public class MapSharingController implements MapSharingControllerInterface {
 
 	public void clearHistory(VectorClock vector_clock) {
 		this.synchronous_editing_history.clearHistory(vector_clock);
+	}
+	
+	public void setChatColor(Color new_color) {
+		this.chat_color = new_color;
 	}
 }
