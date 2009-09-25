@@ -2,13 +2,22 @@
 
 <wiki:toc max_depth="1" />
 
+= Getting SharedMind =
+
+Current beta version of SharedMind can be downloaded from:
+  * Windows installer [http://code.google.com/p/sharedmind/downloads/detail?name=SharedMind-b1_win-installer.exe&can=2&q= download].
+  * Archive file [http://code.google.com/p/sharedmind/downloads/detail?name=SharedMind-b1.zip&can=2&q= download].
+
 = Getting Started =
 
+== Starting Collaboration Plug-in ==
 
+== Sharing a Map ==
 
-= Details =
+== Joining an Existing Group ==
 
-Add your content here.  Format your content with:
-  * Text in *bold* or _italic_
-  * Headings, paragraphs, and lists
-  * Automatic links to other wiki pages
+== Online Editing ==
+
+=== Handling Conflicting Actions ===
+
+== Resolving Offline Conflict ==
