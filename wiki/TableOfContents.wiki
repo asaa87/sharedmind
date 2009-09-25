@@ -1,3 +1,4 @@
   * [UserGuide User Guide]
     * [UserGuide#Download Download]
     * [UserGuide#Getting_Started Getting Started]
+  * [SharedMindLogo Logo]
