@@ -1,18 +1,27 @@
 #sidebar TableOfContents
 
-<wiki:toc max_depth="2" />
+<wiki:toc max_depth="3" />
 
-= Getting [http://code.google.com/p/sharedmind SharedMind] =
+----
+
+= Download =
 
 Current beta version of SharedMind can be downloaded from:
   * Windows installer [http://code.google.com/p/sharedmind/downloads/detail?name=SharedMind-b1_win-installer.exe&can=2&q= download].
   * Archive file [http://code.google.com/p/sharedmind/downloads/detail?name=SharedMind-b1.zip&can=2&q= download].
 
-= Getting SharedMind =
+= Getting Started =
 
 == Starting Collaboration Plug-in ==
 
+  # Run FreeMind.
+  # Save the active map. SharedMind does not allow unnamed map.
+  # Go to Tools > Start Collaboration Mode or press Alt+B. http://sharedmind.googlecode.com/files/startCollaborationScreenshot.png
+  # Fill in user id and port to be used then press Login. SharedMind uses 2 ports, the port number to be used is the one filled in login window and the next port number (ex: for example as shown in the picture, the port number 1111 and 1112 will be used), so remember to open these 2 ports. http://sharedmind.googlecode.com/files/loginWindowScreenshoot.png
+
 == Sharing a Map ==
+
+
 
 == Joining an Existing Group ==
 
