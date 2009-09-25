@@ -75,13 +75,13 @@ public class SynchronousEditingHistory {
 	public synchronized Vector<SharedAction> getConflictingChanges(SharedAction shared_action) {
 		Vector<SharedAction> return_value = new Vector<SharedAction> ();
 		Vector<SharedAction> possibleConflictingAction = getPossiblyConflictingChanges(shared_action);
-		log.warn("Possible conflicting action: " + possibleConflictingAction.toString());
+		log.info("Possible conflicting action: " + possibleConflictingAction.toString());
 		for (SharedAction action : possibleConflictingAction) {
 			if (isConflicting(action.getActionPair().getDoAction(), 
 					shared_action.getActionPair().getDoAction()))
 				return_value.add(action);
 		}
-		log.warn("conflicting actions: " + return_value.toString());
+		log.info("conflicting actions: " + return_value.toString());
 		return return_value;
 	}
 	
@@ -111,7 +111,7 @@ public class SynchronousEditingHistory {
 		
 		// Shared action delete subtree that is modified in action
 		if (shared_is_delete && !(local_is_delete)) {
-			log.warn("remote action is delete");
+			log.debug("remote action is delete");
 			
 			// node deleted by shared action is modified in local
 			if (((NodeAction) shared_action).getNode().equals(((NodeAction) action).getNode()))
@@ -138,7 +138,7 @@ public class SynchronousEditingHistory {
 		}
 		
 		if (local_is_delete && !shared_is_delete) {
-			log.warn("local action is delete");
+			log.debug("local action is delete");
 			
 			// Shared action modifies a node that has been deleted
 			if (((NodeAction) action).getNode().equals(

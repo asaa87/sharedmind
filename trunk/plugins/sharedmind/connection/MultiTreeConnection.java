@@ -144,7 +144,7 @@ public class MultiTreeConnection implements Connection {
 	
 	// message format is :" sender<sender>message"
 	public void processMessage(String message_string) {
-		logger.warn("message_string");
+		logger.debug(message_string);
 		Message message = Message.unmarshall(message_string);
 		if (message.type == Message.MessageType.CHECKPOINTING_SUCCESS) {
 			mpc.checkpointingSuccessReceived(message);
