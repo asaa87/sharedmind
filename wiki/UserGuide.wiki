@@ -21,12 +21,31 @@ Current beta version of SharedMind can be downloaded from:
 
 == Sharing a Map ==
 
+After login, sharing window will appear as shown below.
 
+http://sharedmind.googlecode.com/files/sharingWindowScreenshoot.png
+
+To start sharing a map:
+  # Press 'Connect' button.
+  # When a dialog appear asking whether you have the current map or not choose 'Yes'.
 
 == Joining an Existing Group ==
+
+To join and existing group:
+  # If you already have an older version of the shared map open it.
+  # Fill the text-box beside the 'Connect' button with one of the existing user's IP address or host name and port (example: '127.0.0.1:1111' or 'localhost:1111') then press 'Connect'.
+  # Answer the dialog that whether you already have the previous version of the map or not.
+    * If you choose 'No', the current version of the map will be loaded.
+    * Otherwise, your local copy of the map will be merged with the current shared version. If there is no conflicting changes the merged map will be reloaded in all clients, otherwise the current shared map and another map used for [UserGuide#Resolving_Offline_Conflict manual conflict resolution] will be displayed. 
 
 == Online Editing ==
 
 === Handling Conflicting Actions ===
 
 == Resolving Offline Conflict ==
+
+In the case you previously collaborate on a map and then disconnect from the group, you can still modify your local copy of the map. Upon connecting again to the group SharedMind will try to merge your local copy of the map with the current shared map automatically.
+
+In case there are conflicting changes that cannot be merged automatically, SharedMind will try to merge the maps as much as possible and then provide an interface for the user to resolve the conflicting changes manually.
+
+Explanation on what is considered as conflict is available [ConflictDefinition here]. 
