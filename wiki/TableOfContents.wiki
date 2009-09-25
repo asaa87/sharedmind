@@ -1,4 +1,5 @@
   * [UserGuide User Guide]
     * [UserGuide#Download Download]
     * [UserGuide#Getting_Started Getting Started]
+  * [ReportingBug Reporting Bug]
   * [SharedMindLogo Logo]
