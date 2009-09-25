@@ -40,7 +40,15 @@ To join an existing group:
 
 == Online Editing ==
 
-=== Handling Conflicting Actions ===
+When a user is online, the changes made by user will be sent to other online users.
+
+In case more than one users make a conflicting changes at the same time (example: 2 users change the text of the same node), the conflicting changes will be undone in all users, then a dialog for redoing the canceled actions is provided.
+
+The list of conflicting actions will be shown to every users, but user can only redo his/her own actions.
+
+http://sharedmind.googlecode.com/files/redoDialogScreenshoot.png
+
+In the dialog shown above, the first table shows the user's actions that have been canceled and the second table shows all actions that have been canceled. User can redo the actions shown on the first table.
 
 == Resolving Offline Conflict ==
 
