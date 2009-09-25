@@ -1,7 +1,5 @@
 #sidebar TableOfContents
 
-#summary User guide for using SharedMind.
-
 <wiki:toc max_depth="1" />
 
 = Getting Started =
