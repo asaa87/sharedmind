@@ -1,5 +1,6 @@
 package freemind.modes.mindmapmode;
 
+import java.awt.Color;
 import java.util.Vector;
 
 import freemind.modes.MindMapNode;
@@ -50,7 +51,7 @@ public interface MapSharingControllerInterface {
 
 	public abstract void sendChat(String chat);
 
-	public abstract void addChat(String sender, String message);
+	public abstract void addChat(String sender, String message, Color color);
 
 	public abstract void exitSharing();
 
