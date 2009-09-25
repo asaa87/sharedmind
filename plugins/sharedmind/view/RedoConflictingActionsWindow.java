@@ -314,10 +314,13 @@ public class RedoConflictingActionsWindow {
 			}
 		}
 		try {
-			node_label = mpc.getController().getNodeFromID(node_id).getPlainTextContent();
+			node_label = "'" + mpc.getController().getNodeFromID(node_id).getPlainTextContent() + "'";
+			if (action instanceof EditNodeAction) {
+				node_label += " change to: '" + ((EditNodeAction) action).getText() + "'";
+			}
 		} catch (IllegalArgumentException e) {
 			// node is not in current map
 		}
-		return class_name + " " + node_id + " : '" + node_label + "'";
+		return class_name + " " + node_id + " : " + node_label;
 	}
 }
