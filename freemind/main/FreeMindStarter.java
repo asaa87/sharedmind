@@ -85,9 +85,12 @@ public class FreeMindStarter {
 		}
 		
 		try {
-			if (!logsFolder.exists()) {
-				logsFolder.mkdir();
+			if (logsFolder.exists()) {
+				for ( File child : logsFolder.listFiles())
+					child.delete();
+				logsFolder.delete();
 			}
+			logsFolder.mkdir();
 		} catch (Exception e) {
 			
 		}
