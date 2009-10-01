@@ -43,7 +43,7 @@ import plugins.sharedmind.view.P2PPSharingLoginWindow;
 import plugins.sharedmind.view.RedoConflictingActionsWindow;
 import plugins.sharedmind.view.SharingWindow;
 import plugins.sharedmind.view.TransportErrorWindow;
-import app.multicast.presence.Presence;
+import momo.app.multicast.presence.Presence;
 import freemind.common.XmlBindingTools;
 import freemind.controller.Controller;
 import freemind.controller.MapModuleManager;

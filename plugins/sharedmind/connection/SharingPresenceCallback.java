@@ -5,8 +5,8 @@ import java.util.Vector;
 
 import plugins.sharedmind.MapSharingController;
 
-import app.multicast.presence.PresenceCallback;
-import app.multicast.presence.PresenceMessage;
+import momo.app.multicast.presence.PresenceCallback;
+import momo.app.multicast.presence.PresenceMessage;
 
 public class SharingPresenceCallback implements PresenceCallback {
     Connection connection;
