@@ -19,10 +19,10 @@ import plugins.sharedmind.messages.MapMessageContent;
 import plugins.sharedmind.messages.Message;
 import plugins.sharedmind.messages.RequestRetransmissionMessageContent;
 
-import app.multicast.Msg;
-import app.multicast.MsgRcvListener;
-import app.multicast.MulticastComm;
-import app.multicast.presence.PresenceMulticastComm;
+import momo.app.multicast.Msg;
+import momo.app.multicast.MsgRcvListener;
+import momo.app.multicast.MulticastComm;
+import momo.app.multicast.presence.PresenceMulticastComm;
 
 public class MultiTreeConnection implements Connection {
 	private static Logger logger = Logger

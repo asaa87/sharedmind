@@ -17,7 +17,7 @@ import plugins.sharedmind.MapSharingController;
 import plugins.sharedmind.synchronouscollaboration.SharedAction;
 import plugins.sharedmind.synchronouscollaboration.VectorClock;
 
-import app.multicast.presence.PresenceMessage;
+import momo.app.multicast.presence.PresenceMessage;
 
 import freemind.main.XMLParseException;
 import freemind.modes.attributes.Attribute;
