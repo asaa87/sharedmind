@@ -3,8 +3,9 @@
 	<plugin_classpath jar="sharedmind/sharedmind_plugin.jar"/>
 	<plugin_classpath jar="../lib/jibx/log4j-1.2.8.jar"/>
 	<plugin_classpath jar="sharedmind/lib/TreeComm/multitrees.jar"/>
-	<plugin_classpath jar="sharedmind/lib/*.jar"/>
-	<plugin_classpath jar="sharedmind/lib/jdk1.3/*.jar"/>
+	<plugin_classpath jar="sharedmind/lib/smack.jar"/>
+	<plugin_classpath jar="sharedmind/lib/smackx.jar"/>
+	<plugin_classpath jar="sharedmind/lib/xstream/lib/*.jar"/>
 	<plugin_action 
 		documentation="Start SharedMind" 
 		name="Start Collaboration Mode" 
