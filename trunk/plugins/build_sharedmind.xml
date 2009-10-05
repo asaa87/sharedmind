@@ -9,6 +9,6 @@
 	<property name="additional.lib" value="${plugin.dir}/batik-awt-util.jar:${plugin.dir}/batik-bridge.jar:${plugin.dir}/batik-css.jar:${plugin.dir}/batik-dom.jar:${plugin.dir}/batik-extension.jar:${plugin.dir}/batik-ext.jar:${plugin.dir}/batik-gui-util.jar:${plugin.dir}/batik-gvt.jar:${plugin.dir}/batik-parser.jar:${plugin.dir}/batik-script.jar:${plugin.dir}/batik-svg-dom.jar:${plugin.dir}/batik-svggen.jar:${plugin.dir}/batik-swing.jar:${plugin.dir}/batik-transcoder.jar:${plugin.dir}/batik-util.jar:${plugin.dir}/batik-xml.jar:${plugin.dir}/js.jar:${plugin.dir}/pdf-transcoder.jar:${plugin.dir}/xerces_2_5_0.jar:${plugin.dir}/xml-apis.jar:${plugin.dir}/batik-squiggle.jar"/>
 	-->
 	<property name="additional.lib" value="${plugin.dir}/lib/smack.jar:${plugin.dir}/lib/smackx.jar:${plugin.dir}/lib/TreeComm/multitrees.jar:${plugin.dir}/lib/xstream/lib/*.jar"/>
-	<property name="additional.lib.pattern" value="${plugin.dir}/lib/:${plugin.dir}/gmomo/"/>
+	<property name="additional.lib.pattern" value="${plugin.dir}/lib/"/>
 	<import file="build_import.xml" />
 </project>

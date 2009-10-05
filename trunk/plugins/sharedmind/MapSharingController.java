@@ -22,6 +22,9 @@ import plugins.sharedmind.checkpoint.CheckpointList;
 import plugins.sharedmind.checkpoint.ReadOnlyCheckpointList;
 import plugins.sharedmind.connection.Connection;
 import plugins.sharedmind.connection.MultiTreeConnection;
+import plugins.sharedmind.gmomo.ContactList;
+import plugins.sharedmind.gmomo.InvitationListener;
+import plugins.sharedmind.gmomo.PresenceListener;
 import plugins.sharedmind.merging.MapsDiff;
 import plugins.sharedmind.merging.MergedMap;
 import plugins.sharedmind.merging.MapsDiff.ChangeList.Change;
@@ -43,6 +46,8 @@ import plugins.sharedmind.view.P2PPSharingLoginWindow;
 import plugins.sharedmind.view.RedoConflictingActionsWindow;
 import plugins.sharedmind.view.SharingWindow;
 import plugins.sharedmind.view.TransportErrorWindow;
+import plugins.sharedmind.view.gmomo.ContactListWindow;
+import plugins.sharedmind.view.gmomo.InvitationWindow;
 import momo.app.multicast.presence.Presence;
 import freemind.common.XmlBindingTools;
 import freemind.controller.Controller;
@@ -58,18 +63,27 @@ import freemind.modes.mindmapmode.MindMapMapModel;
 import freemind.modes.mindmapmode.actions.xml.ActionPair;
 import freemind.modes.mindmapmode.actions.xml.SharingActionFactory;
 import freemind.view.MapModule;
+import gmomo.GMoMoConfig;
+import gmomo.GMoMoConnection;
+import gmomo.PacketListenerImpl;
+import gmomo.packet.Invitation;
+import gmomo.test.gui.GUIInvitationListener;
+import gmomo.test.gui.GUIMessageListener;
+import gmomo.test.gui.GUIPresenceListener;
 
 public class MapSharingController implements MapSharingControllerInterface {
+	private static String XMPP_RESOURCE_STRING = "sharedmind";
+	private static String GMOMO_CONFIG_FILE = "plugins/sharedmind/lib/TreeComm/config/config.properties";
 	private Logger log = Logger.getLogger(MapSharingController.class);
 	
-	private P2PPSharingLoginWindow loginWindow;
+	private P2PPSharingLoginWindow login_window;
 	private Connection connection;
 
-	private SharingWindow sharingWindow;
+	private SharingWindow sharing_window;
 	private ConnectingWindow connecting_window;
 	private Color chat_color;
-	private MindMapController mmController;
-	private MindMapNode currentlyEditedNode;
+	private MindMapController mm_controller;
+	private MindMapNode currently_edited_node;
 	private MessageQueue message_queue;
 	private SynchronousEditingHistory synchronous_editing_history;
 	// for checkpointing
@@ -79,6 +93,10 @@ public class MapSharingController implements MapSharingControllerInterface {
 	private boolean has_map;
 	private boolean map_shared;
 	XmlBindingTools test;
+	// for gmomo
+	private ContactList gmomo_contact_list;
+	private GMoMoConnection gmomo_connection;
+	private ContactListWindow contact_list_window;
 
 	/**
 	 * userId used for joining the network
@@ -92,17 +110,26 @@ public class MapSharingController implements MapSharingControllerInterface {
 	private MindMapController last_common_map;
 
 	public MapSharingController(MindMapController mmcontroller) {
-		this.mmController = mmcontroller;
-		mmController.getController().registerMapSharingController(this);
+		this.mm_controller = mmcontroller;
+		mm_controller.getController().registerMapSharingController(this);
 		test = XmlBindingTools.getInstance();
-		this.currentlyEditedNode = null;
-		this.loginWindow = new P2PPSharingLoginWindow(this);
+		this.currently_edited_node = null;
+		this.login_window = new P2PPSharingLoginWindow(this);
 		this.connection = null;
+		try {
+			this.gmomo_connection = new GMoMoConnection(GMoMoConfig.load(GMOMO_CONFIG_FILE));
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		this.has_map = false;
 		this.synchronous_editing_history = new SynchronousEditingHistory(this);
 		this.checkpoint_list = new CheckpointList(this);
 		this.chat_color = Color.black;
-		loginWindow.setVisible(true);
+		login_window.setVisible(true);
 		Presence.setPresenceInterval(60000);
 		merged_map = null;
 		map_shared = false;
@@ -160,11 +187,11 @@ public class MapSharingController implements MapSharingControllerInterface {
 		ActionPair action_pair = new ActionPair(doAction, undoAction);
 		SharedAction queued_message = new SharedAction(
 				message.sender, timestamp, action_pair);
-		if (doAction instanceof NodeAction && currentlyEditedNode != null) {
+		if (doAction instanceof NodeAction && currently_edited_node != null) {
 			String node = ((NodeAction) (doAction)).getNode();
 			System.out.println(node);
-			if (node.equals(currentlyEditedNode.getObjectId(mmController))) {
-				ConflictWindow.ShowConflictWindow(mmController.getFrame().getJFrame());
+			if (node.equals(currently_edited_node.getObjectId(mm_controller))) {
+				ConflictWindow.ShowConflictWindow(mm_controller.getFrame().getJFrame());
 			}
 		}
 		Vector<SharedAction> messages = message_queue
@@ -197,19 +224,19 @@ public class MapSharingController implements MapSharingControllerInterface {
 				ActionPair undoAction = 
 					new ActionPair(cancel_action.getActionPair().getUndoAction(), 
 							cancel_action.getActionPair().getDoAction());
-				((SharingActionFactory) mmController.getActionFactory())
+				((SharingActionFactory) mm_controller.getActionFactory())
 					.remoteExecuteAction(undoAction);
 			}
 			// do new action
-			((SharingActionFactory) mmController.getActionFactory())
+			((SharingActionFactory) mm_controller.getActionFactory())
 				.remoteExecuteAction(message.getActionPair());
 			// redo actions
 			for (SharedAction redo_action : following_actions) {
-				((SharingActionFactory) mmController.getActionFactory())
+				((SharingActionFactory) mm_controller.getActionFactory())
 					.remoteExecuteAction(redo_action.getActionPair());
 			}
 		} else {
-			ConflictWindow.ShowConflictWindow(mmController.getFrame().getJFrame());
+			ConflictWindow.ShowConflictWindow(mm_controller.getFrame().getJFrame());
 			message.setUndoed(true);
 			for (int i = conflicting.size() - 1; i >= 0; --i) {
 				SharedAction cancel_action = conflicting.get(i);
@@ -219,7 +246,7 @@ public class MapSharingController implements MapSharingControllerInterface {
 					ActionPair undoAction = 
 						new ActionPair(cancel_action.getActionPair().getUndoAction(), 
 								cancel_action.getActionPair().getDoAction());
-					((SharingActionFactory) mmController.getActionFactory())
+					((SharingActionFactory) mm_controller.getActionFactory())
 						.remoteExecuteAction(undoAction);
 				}
 			}
@@ -228,9 +255,9 @@ public class MapSharingController implements MapSharingControllerInterface {
 				message.getTimestamp());
 		this.synchronous_editing_history.addToHistory(message);
 		if (message.isUndoed()) {
-			RedoConflictingActionsWindow.showRedoConflictingActionsWindow(mmController.getController().getJFrame(), this);
+			RedoConflictingActionsWindow.showRedoConflictingActionsWindow(mm_controller.getController().getJFrame(), this);
 		}
-		mmController.repaintMap();
+		mm_controller.repaintMap();
 	}
 
 	/* (non-Javadoc)
@@ -240,10 +267,10 @@ public class MapSharingController implements MapSharingControllerInterface {
 		if (last_successful_checkpoint != null) {
 			last_successful_checkpoint.saveCheckpointToFile();
 		}
-		mmController.save();
+		mm_controller.save();
 		StringWriter body = new StringWriter();
 		try {
-			mmController.getMap().getXml(body);
+			mm_controller.getMap().getXml(body);
 		} catch (Exception err) {
 			err.printStackTrace();
 		}
@@ -310,11 +337,11 @@ public class MapSharingController implements MapSharingControllerInterface {
 	public void loadAndMergeMap(MapMessageContent content) {
 		if (this.connection.getUserName().equals(content.requester)) {
 			if (has_map) {
-				File local_map = mmController.getMap().getFile();
-				mmController.save();
+				File local_map = mm_controller.getMap().getFile();
+				mm_controller.save();
 				loadMap(content);
 				try {
-					mergeMap(local_map.toURI().toURL(), mmController.getModel()
+					mergeMap(local_map.toURI().toURL(), mm_controller.getModel()
 							.getFile().toURI().toURL());
 				} catch (MalformedURLException e) {
 					e.printStackTrace();
@@ -331,18 +358,18 @@ public class MapSharingController implements MapSharingControllerInterface {
 	public void loadMap(MapMessageContent content) {
 		log.debug("loading map");
 		this.stopSharingMap();
-		Controller controller = mmController.getController();
+		Controller controller = mm_controller.getController();
 		MapModuleManager map_module_manager = controller.getMapModuleManager();
 		List<MapModule> map_modules = map_module_manager.getMapModuleVector();
 		String display_name = "";
 		for (MapModule map_module : map_modules) {
-			if (map_module.getModeController() == this.mmController)
+			if (map_module.getModeController() == this.mm_controller)
 				display_name = map_module.getDisplayName();
 		}
 		log.debug("display name: " + display_name);
 		map_module_manager.tryToChangeToMapModule(display_name);
-		mmController.load(content.map);
-		mmController = (MindMapController) controller.getMapModule()
+		mm_controller.load(content.map);
+		mm_controller = (MindMapController) controller.getMapModule()
 				.getModeController();
 		VectorClock vector_clock = new VectorClock(content.vector_clock);
 		Vector<String> participants = this.message_queue.getCurrentParticipant();
@@ -356,8 +383,8 @@ public class MapSharingController implements MapSharingControllerInterface {
 			for (Map.Entry<Integer, String> entry : content.checkpoint_list
 					.entrySet()) {
 				File file = File.createTempFile("CHECKPOINT_"
-						+ mmController.getMap().getFile().getName(), "mm",
-						mmController.getMap().getFile().getParentFile());
+						+ mm_controller.getMap().getFile().getName(), "mm",
+						mm_controller.getMap().getFile().getParentFile());
 				FileWriter writer = new FileWriter(file);
 				writer.write(entry.getValue());
 				writer.close();
@@ -367,8 +394,8 @@ public class MapSharingController implements MapSharingControllerInterface {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		mmController.getModel().setSaved(false);
-		mmController.save();
+		mm_controller.getModel().setSaved(false);
+		mm_controller.save();
 		this.shareMap();
 	}
 
@@ -376,7 +403,7 @@ public class MapSharingController implements MapSharingControllerInterface {
 	 * @see plugins.sharedmind.MapSharingControllerInterface#unregister()
 	 */
 	public void unregister() {
-		mmController.getController().deregisterMapSharingController(this);
+		mm_controller.getController().deregisterMapSharingController(this);
 	}
 
 	/* (non-Javadoc)
@@ -394,10 +421,10 @@ public class MapSharingController implements MapSharingControllerInterface {
 	public synchronized void setCurrentEditedNode(MindMapNode selected) {
 		if (selected != null
 				&& message_queue.editConflicting(selected
-						.getObjectId(mmController))) {
-			ConflictWindow.ShowConflictWindow(mmController.getFrame().getJFrame());
+						.getObjectId(mm_controller))) {
+			ConflictWindow.ShowConflictWindow(mm_controller.getFrame().getJFrame());
 		}
-		this.currentlyEditedNode = selected;
+		this.currently_edited_node = selected;
 	}
 
 	/* (non-Javadoc)
@@ -405,7 +432,7 @@ public class MapSharingController implements MapSharingControllerInterface {
 	 */
 	public void setMindMapController(ModeController newModeController) {
 		if (newModeController instanceof MindMapController)
-			this.mmController = (MindMapController) newModeController;
+			this.mm_controller = (MindMapController) newModeController;
 	}
 
 	/* (non-Javadoc)
@@ -457,9 +484,9 @@ public class MapSharingController implements MapSharingControllerInterface {
 	 * @see plugins.sharedmind.MapSharingControllerInterface#addSharingWindow()
 	 */
 	public void addSharingWindow() {
-		loginWindow.setVisible(false);
-		loginWindow.dispose();
-		this.sharingWindow = new SharingWindow(this);
+		login_window.setVisible(false);
+		login_window.dispose();
+		this.sharing_window = new SharingWindow(this);
 	}
 
 	/* (non-Javadoc)
@@ -476,7 +503,7 @@ public class MapSharingController implements MapSharingControllerInterface {
 	 */
 	public void unsubscribeToTopic() {
 		connection.unsubscribeToTopic();
-		this.sharingWindow.addChat("--- Disconnected ---", Color.black);
+		this.sharing_window.addChat("--- Disconnected ---", Color.black);
 		this.stopSharingMap();
 		if (last_successful_checkpoint != null) {
 			last_successful_checkpoint.saveCheckpointToFile();
@@ -498,7 +525,7 @@ public class MapSharingController implements MapSharingControllerInterface {
 	 * @see plugins.sharedmind.MapSharingControllerInterface#addChat(java.lang.String, java.lang.String)
 	 */
 	public void addChat(String sender, String message, Color color) {
-		sharingWindow.addChat(sender + ": " + message, color);
+		sharing_window.addChat(sender + ": " + message, color);
 	}
 
 	/* (non-Javadoc)
@@ -534,17 +561,17 @@ public class MapSharingController implements MapSharingControllerInterface {
 	 * @see plugins.sharedmind.MapSharingControllerInterface#showCommunicationError(java.lang.String)
 	 */
 	public void showCommunicationError(String error_message) {
-		if (sharingWindow == null)
+		if (sharing_window == null)
 			return;
 		TransportErrorWindow error_window = new TransportErrorWindow(
-				sharingWindow, error_message);
+				sharing_window, error_message);
 	}
 
 	/* (non-Javadoc)
 	 * @see plugins.sharedmind.MapSharingControllerInterface#getController()
 	 */
 	public MindMapController getController() {
-		return mmController;
+		return mm_controller;
 	}
 
 	/* (non-Javadoc)
@@ -572,15 +599,15 @@ public class MapSharingController implements MapSharingControllerInterface {
 	 * @see plugins.sharedmind.MapSharingControllerInterface#showGetMapWindow()
 	 */
 	public void showGetMapWindow() {
-		this.sharingWindow.addChat("--- Connected ---", Color.black);
-		new GetMapWindow(sharingWindow, this);
+		this.sharing_window.addChat("--- Connected ---", Color.black);
+		new GetMapWindow(sharing_window, this);
 	}
 	
 	/* (non-Javadoc)
 	 * @see plugins.sharedmind.MapSharingControllerInterface#showConnectingWindow()
 	 */
 	public void showConnectingWindow() {
-		this.connecting_window = new ConnectingWindow(sharingWindow, this);
+		this.connecting_window = new ConnectingWindow(sharing_window, this);
 	}
 
 	/* (non-Javadoc)
@@ -621,7 +648,7 @@ public class MapSharingController implements MapSharingControllerInterface {
 	public void startCheckpointing() {
 		checkpoint_in_progress = new Checkpoint(this,
 				last_successful_checkpoint);
-		sharingWindow.startCheckpointing();
+		sharing_window.startCheckpointing();
 	}
 
 	/* (non-Javadoc)
@@ -629,7 +656,7 @@ public class MapSharingController implements MapSharingControllerInterface {
 	 */
 	public void stopCheckpointing() {
 		this.checkpoint_in_progress = null;
-		sharingWindow.stopCheckpointing();
+		sharing_window.stopCheckpointing();
 	}
 
 	/* (non-Javadoc)
@@ -720,23 +747,23 @@ public class MapSharingController implements MapSharingControllerInterface {
 		MapsDiff diff = merged_map.getMapDiff1();
 		Vector<Change> list = diff.getChangesList().getList();
 		for (Change change : list) {
-			sharingWindow.addChat(change.toString(), Color.black);
+			sharing_window.addChat(change.toString(), Color.black);
 		}
-		sharingWindow.addChat("-------------", Color.black);
+		sharing_window.addChat("-------------", Color.black);
 		diff = merged_map.getMapDiff2();
 		list = diff.getChangesList().getList();
 		for (Change change : list) {
-			sharingWindow.addChat(change.toString(), Color.black);
+			sharing_window.addChat(change.toString(), Color.black);
 		}
 	}
 
 	private void mergeMap(URL local_map, URL current_map) {
-		MindMapController local_map_controller = (MindMapController) mmController
+		MindMapController local_map_controller = (MindMapController) mm_controller
 				.getMode().createModeController();
-		new MindMapMapModel(mmController.getFrame(), local_map_controller);
-		MindMapController current_map_controller = (MindMapController) mmController
+		new MindMapMapModel(mm_controller.getFrame(), local_map_controller);
+		MindMapController current_map_controller = (MindMapController) mm_controller
 				.getMode().createModeController();
-		new MindMapMapModel(mmController.getFrame(), current_map_controller);
+		new MindMapMapModel(mm_controller.getFrame(), current_map_controller);
 //		MindMapController common_map_controller = (MindMapController) mmController
 //				.getMode().createModeController();
 //		new MindMapMapModel(mmController.getFrame(), common_map_controller);
@@ -763,13 +790,13 @@ public class MapSharingController implements MapSharingControllerInterface {
 
 	private void mergeMap(MindMapController local_map_controller,
 			MindMapController current_map_controller) {
-		MindMapController common_map_controller = (MindMapController) mmController
+		MindMapController common_map_controller = (MindMapController) mm_controller
 				.getMode().createModeController();
-		new MindMapMapModel(mmController.getFrame(), common_map_controller);
+		new MindMapMapModel(mm_controller.getFrame(), common_map_controller);
 		try {
 			String common_map = this.getCommonMapFile(local_map_controller,
 					current_map_controller);
-			sharingWindow.addChat(common_map, Color.black);
+			sharing_window.addChat(common_map, Color.black);
 			File common_map_file = new File(common_map);
 			common_map_controller.getModel().load(
 					common_map_file.toURI().toURL());
@@ -787,21 +814,21 @@ public class MapSharingController implements MapSharingControllerInterface {
 
 	private void mergeMap(MindMapController common_map_controller, 
 			MindMapController local_map_controller, MindMapController current_map_controller) {
-		sharingWindow.addChat("------------------merging map---------------------", Color.black);
+		sharing_window.addChat("------------------merging map---------------------", Color.black);
 		try {
 			last_common_map = current_map_controller;
 			merged_map = new MergedMap(this, common_map_controller,
 					local_map_controller, current_map_controller);
 			System.out.println(merged_map.getConflictList().getList().toString());
 			if (merged_map.getConflictList().getList().isEmpty()) {
-				sharingWindow.addChat("-------------no conflict--------------", Color.black);
+				sharing_window.addChat("-------------no conflict--------------", Color.black);
 				MindMapController final_map = merged_map.finalizedMergedMap();
 				this.sendChangeMap(final_map);
 			} else {
-				sharingWindow.addChat("-------------conflict--------------", Color.black);
+				sharing_window.addChat("-------------conflict--------------", Color.black);
 				merged_map.showMergingMap();
 				MergingWindow merging_window = 
-					new MergingWindow(mmController.getController().getJFrame(), this);
+					new MergingWindow(mm_controller.getController().getJFrame(), this);
 			}
 		} catch (XMLParseException e) {
 			e.printStackTrace();
@@ -835,7 +862,7 @@ public class MapSharingController implements MapSharingControllerInterface {
 	public void onMergeFinished() {
 		MindMapController finalized_merged_map = merged_map
 				.finalizedMergedMap();
-		mergeMap(last_common_map, finalized_merged_map, mmController);
+		mergeMap(last_common_map, finalized_merged_map, mm_controller);
 	}
 
 	/* (non-Javadoc)
@@ -851,12 +878,12 @@ public class MapSharingController implements MapSharingControllerInterface {
 	public void shareMap() {
 		if (!this.map_shared) {
 			this.map_shared = true;
-			mmController.shareMap();
-			sharingWindow.setVersion(Integer.parseInt(
-					(String) mmController.getModel().getRegistry().getAttributes()
+			mm_controller.shareMap();
+			sharing_window.setVersion(Integer.parseInt(
+					(String) mm_controller.getModel().getRegistry().getAttributes()
 					.getElement("VERSION").getValues().firstElement()));
 		}
-		sharingWindow.propagateFoldActionEnabled(true);
+		sharing_window.propagateFoldActionEnabled(true);
 	}
 	
 	/* (non-Javadoc)
@@ -865,8 +892,8 @@ public class MapSharingController implements MapSharingControllerInterface {
 	public void stopSharingMap() {
 		if (this.map_shared) {
 			this.map_shared = false;
-			mmController.stopSharingMap();
-			sharingWindow.propagateFoldActionEnabled(false);
+			mm_controller.stopSharingMap();
+			sharing_window.propagateFoldActionEnabled(false);
 		}
 	}
 
@@ -874,21 +901,21 @@ public class MapSharingController implements MapSharingControllerInterface {
 	 * @see plugins.sharedmind.MapSharingControllerInterface#updateOnlineUserList(java.util.Vector)
 	 */
 	public void updateOnlineUserList(Vector<String> user_list) {
-		sharingWindow.setOnlineUserList(user_list);
+		sharing_window.setOnlineUserList(user_list);
 	}
 
 	/* (non-Javadoc)
 	 * @see plugins.sharedmind.MapSharingControllerInterface#onVersionChange(int)
 	 */
 	public void onVersionChange(int version) {
-		sharingWindow.setVersion(version);
+		sharing_window.setVersion(version);
 	}
 
 	/* (non-Javadoc)
 	 * @see plugins.sharedmind.MapSharingControllerInterface#setPropagateFoldAction(boolean)
 	 */
 	public void setPropagateFoldAction(boolean b) {
-		((SharingActionFactory) mmController.getActionFactory()).setPropagate_folding_action(b);
+		((SharingActionFactory) mm_controller.getActionFactory()).setPropagate_folding_action(b);
 	}
 	
 	/* (non-Javadoc)
@@ -941,5 +968,67 @@ public class MapSharingController implements MapSharingControllerInterface {
 	
 	public void setChatColor(Color new_color) {
 		this.chat_color = new_color;
+	}
+	
+	// ---------------------------- gmomo methods ------------------------------------
+	
+	public void gmomoLogin(String uid, String pwd) throws Exception {
+		gmomo_contact_list = new ContactList(this, uid);
+		gmomo_connection.connect();
+		gmomo_connection.login(uid, pwd, XMPP_RESOURCE_STRING);
+		setupGmomoListener();
+	}
+
+	public boolean isGmomoAuthenticated() {
+		return gmomo_connection.isConnected() &&
+				gmomo_connection.isAuthenticated();
+	}
+	
+	private void setupGmomoListener() {
+		PacketListenerImpl gmomo_listener = new PacketListenerImpl();
+		gmomo_listener.addPresenceListener(new PresenceListener(this));
+		gmomo_listener.addInvitationListener(new InvitationListener(this));
+//		gmomo_listener.addMessageListener(new GUIMessageListener(this));
+		
+		gmomo_connection.addPacketListener(gmomo_listener, null);
+	}
+
+	public void onGmomoContactRemoved(String address) {
+		this.contact_list_window.removeContact(address);
+	}
+
+	public void onGmomoContactAdded(String address) {
+		this.contact_list_window.addContact(address);
+	}
+
+	public void showGmomoLoginWindow() {
+		plugins.sharedmind.view.gmomo.LoginWindow gmomo_login_window =
+			new plugins.sharedmind.view.gmomo.LoginWindow(this.sharing_window, this);
+	}
+	
+	public void showGmomoContactListWindow() {
+		if (this.contact_list_window == null) {
+			this.contact_list_window =
+				new ContactListWindow(this, this.sharing_window);
+		}
+		this.contact_list_window.show();
+	}
+
+	public void invite(String address, String ip, int port) {
+		Invitation invitation = new Invitation(address);
+		invitation.setBody("Hi i hope to collaborate with you on SharedMind");
+		System.out.println(ip);
+		invitation.setHost(ip);
+		invitation.setPort(port);
+		this.gmomo_connection.sendPacket(invitation.getPacket());
+	}
+
+	public void onGmomoPresenceChanged(
+			org.jivesoftware.smack.packet.Presence presence) {
+		this.gmomo_contact_list.updateContact(presence);
+	}
+
+	public void onInvitationReceived(Invitation invitation) {
+		new InvitationWindow(this.sharing_window, this, invitation);
 	}
 }

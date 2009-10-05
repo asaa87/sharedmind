@@ -9,13 +9,9 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.util.List;
 import java.util.Vector;
 
-import javax.swing.JTextArea;
 import javax.swing.JTextField;
-import javax.swing.event.CaretEvent;
-import javax.swing.event.CaretListener;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Style;
 import javax.swing.text.StyleConstants;
@@ -40,6 +36,7 @@ public class SharingWindow extends javax.swing.JFrame {
     private javax.swing.JButton unsubscribeButton;
     private javax.swing.JButton sendButton;
     private javax.swing.JButton changeColorButton;
+    private javax.swing.JButton gmomoButton;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
@@ -82,6 +79,14 @@ public class SharingWindow extends javax.swing.JFrame {
         unsubscribeButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				mpc.unsubscribeToTopic();
+			}
+        	
+        });
+        gmomoButton.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				onInvite();
 			}
         	
         });
@@ -198,6 +203,7 @@ public class SharingWindow extends javax.swing.JFrame {
         subscribeButton = new javax.swing.JButton();
         unsubscribeButton = new javax.swing.JButton();
         changeColorButton = new javax.swing.JButton();
+        gmomoButton = new javax.swing.JButton();
         jScrollPane1 = new javax.swing.JScrollPane();
         chatPane = new javax.swing.JTextPane();
         jScrollPane2 = new javax.swing.JScrollPane();
@@ -216,6 +222,7 @@ public class SharingWindow extends javax.swing.JFrame {
         subscribeButton.setText("Connect");
         unsubscribeButton.setText("Disconnect");
         changeColorButton.setText("Change Color");
+        gmomoButton.setText("Invite");
 
         chatPane.setSize(200, 75);
         chatPane.setEditable(false);
@@ -267,11 +274,13 @@ public class SharingWindow extends javax.swing.JFrame {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(unsubscribeButton)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(changeColorButton))
+                        .addComponent(gmomoButton))
                     .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addComponent(statusLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 450, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(statusLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 330, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(propagateFoldActionCheckbox))
+                        .addComponent(propagateFoldActionCheckbox)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(changeColorButton))
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 470, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -287,7 +296,7 @@ public class SharingWindow extends javax.swing.JFrame {
 //                    .addComponent(createButton)
                     .addComponent(subscribeButton)
                     .addComponent(unsubscribeButton)
-                    .addComponent(changeColorButton))
+                    .addComponent(gmomoButton))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 		.addComponent(tabbedPane, javax.swing.GroupLayout.PREFERRED_SIZE, 179, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -299,7 +308,8 @@ public class SharingWindow extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 		.addComponent(statusLabel)
-                		.addComponent(propagateFoldActionCheckbox))
+                		.addComponent(propagateFoldActionCheckbox)
+                		.addComponent(changeColorButton))
                 .addContainerGap())
         );
 
@@ -334,6 +344,14 @@ public class SharingWindow extends javax.swing.JFrame {
 
 	public void stopCheckpointing() {
 		addCheckpointStatus("----- Stop checkpointing -----");
+	}
+	
+	public void onInvite() {
+		if (!mpc.isGmomoAuthenticated()) {
+			mpc.showGmomoLoginWindow();
+		} else {
+			mpc.showGmomoContactListWindow();
+		}
 	}
 }
 
