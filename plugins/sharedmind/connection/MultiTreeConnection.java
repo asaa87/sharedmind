@@ -209,4 +209,9 @@ public class MultiTreeConnection implements Connection {
 		this.connection.leave();
 	}
 
+	@Override
+	public int getPort() {
+		return port;
+	}
+
 }

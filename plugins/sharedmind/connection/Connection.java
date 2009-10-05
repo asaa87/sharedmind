@@ -39,4 +39,6 @@ public interface Connection {
 	public void unsubscribeToTopic();
 
 	public void sendRequestRetransmission(String from, int clock_value);
+
+	public int getPort();
 }
