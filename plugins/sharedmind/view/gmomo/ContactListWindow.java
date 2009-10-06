@@ -12,12 +12,9 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTree;
-import javax.swing.event.TreeModelListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
-import javax.swing.tree.TreeModel;
-import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
@@ -47,6 +44,7 @@ public class ContactListWindow {
 	}
 
 	private void initializeComponents() {
+		this.contact_list_dialog.setTitle("Googletalk Contacts");
 		this.contact_tree = new JTree();
 		this.tree_scrollpane = new JScrollPane();
 		this.invite_button = new JButton();
@@ -54,8 +52,6 @@ public class ContactListWindow {
 		
 		this.contact_tree.putClientProperty("JTree.lineStyle", "None");
 		this.tree_scrollpane.setPreferredSize(new Dimension(200, 300));
-//		this.tree_scrollpane.setMinimumSize(new Dimension(200, 300));
-//		this.tree_scrollpane.setMaximumSize(new Dimension(200,300));
 		this.tree_scrollpane.setAlignmentX(Component.CENTER_ALIGNMENT);
 		this.tree_scrollpane.setViewportView(this.contact_tree);
 		
