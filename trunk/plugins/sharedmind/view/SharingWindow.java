@@ -222,7 +222,7 @@ public class SharingWindow extends javax.swing.JFrame {
         subscribeButton.setText("Connect");
         unsubscribeButton.setText("Disconnect");
         changeColorButton.setText("Change Color");
-        gmomoButton.setText("Invite");
+        gmomoButton.setText("Google Chat Login");
 
         chatPane.setSize(200, 75);
         chatPane.setEditable(false);
@@ -350,6 +350,7 @@ public class SharingWindow extends javax.swing.JFrame {
 		if (!mpc.isGmomoAuthenticated()) {
 			mpc.showGmomoLoginWindow();
 		} else {
+			this.gmomoButton.setText("Google Chat Invitation");
 			mpc.showGmomoContactListWindow();
 		}
 	}

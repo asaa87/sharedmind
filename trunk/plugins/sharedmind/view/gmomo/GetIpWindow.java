@@ -70,6 +70,7 @@ public class GetIpWindow {
 	}
 
 	private void initializeComponent() {
+		this.dialog.setTitle("Your ip address and port");
 		this.ip_label = new JLabel();
 		this.port_label = new JLabel();
 		this.ip_combobox = new JComboBox();
@@ -112,5 +113,6 @@ public class GetIpWindow {
 		
 		this.dialog.setSize(new Dimension(200, 100));
 		this.dialog.setMinimumSize(new Dimension(200, 100));
+		this.dialog.setResizable(false);
 	}
 }
