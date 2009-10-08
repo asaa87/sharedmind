@@ -1,3 +1,1 @@
-#summary One-sentence summary of this page.
-
-Collaborative software for mind-mapping. 
+[http://code.google.com/p/sharedmind SharedMind] is a collaborative version of [http://freemind.sourceforge.net/wiki/index.php/Main_Page FreeMind] mind mapping software. It uses [http://code.google.com/p/momocomm/ MoMoComm] as the communication library. SharedMind has been developed by researchers from the [http://sands.sce.ntu.edu.sg/ SANDS] research group at NTU Singapore. 
