@@ -13,8 +13,8 @@ Be sure to have:
 = Download =
 
 Current beta version of SharedMind can be downloaded from:
-  * Windows installer [http://code.google.com/p/sharedmind/downloads/detail?name=SharedMind-b1_win-installer.exe&can=2&q= download].
-  * Archive file [http://code.google.com/p/sharedmind/downloads/detail?name=SharedMind-b1.zip&can=2&q= download].
+  * Windows installer [http://sharedmind.googlecode.com/files/SharedMind-b2_win-installer.exe download].
+  * Archive file [http://sharedmind.googlecode.com/files/SharedMind-b2.zip download].
 
 = Getting Started =
 
