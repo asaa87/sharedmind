@@ -34,11 +34,9 @@ import javax.swing.JOptionPane;
 import freemind.controller.actions.generated.instance.RevertXmlAction;
 import freemind.controller.actions.generated.instance.XmlAction;
 import freemind.modes.MindMap;
-import freemind.modes.ModeController;
 import freemind.modes.mindmapmode.MindMapController;
 import freemind.modes.mindmapmode.actions.xml.ActionPair;
 import freemind.modes.mindmapmode.actions.xml.ActorXml;
-import freemind.modes.mindmapmode.actions.xml.SharingActionFactory;
 
 /**
  * Reverts the map to the saved version. In Xml, the old map is stored as xml
@@ -102,7 +100,7 @@ freemind.main.Resources.getInstance().logException(			e);
                     .getMap(), null, null);
             controller.getActionFactory().startTransaction(
                     this.getClass().getName());
-            (controller.getActionFactory()).executeAction(
+            controller.getActionFactory().executeAction(
                     new ActionPair(doAction, undoAction));
             controller.getActionFactory().endTransaction(
                     this.getClass().getName());

@@ -185,12 +185,6 @@ public class Controller  implements MapModuleChangeObserver {
     public PropertyAction propertyAction;
 	public OpenURLAction freemindUrl;
 	
-	// TODO:
-	// TODO:
-	// TODO:
-	// TODO:
-	// TODO:
-	// TODO:
 	private MapSharingControllerInterface mpc;
 
 	// this values better suit at least the test purposes
