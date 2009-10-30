@@ -30,8 +30,6 @@ import java.util.ListIterator;
 import freemind.main.FreeMindMain;
 import freemind.main.HtmlTools;
 import freemind.modes.MindMap;
-import freemind.modes.MindMapEdge;
-import freemind.modes.MindMapNode;
 import freemind.modes.NodeAdapter;
 
 /**

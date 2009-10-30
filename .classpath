@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry excluding="**/build*.xml|**/build.xml|**/cvs/|plugins/collaboration/**|logs/|log4j/|plugins/SharingActions.java|plugins/P2PPConnection.java|nbproject/|plugins/sharedmind/gmomo/config/" kind="src" path=""/>
-	<classpathentry kind="src" path="logs"/>
+	<classpathentry excluding="**/build*.xml|**/build.xml|**/cvs/|plugins/collaboration/**|log4j/|plugins/SharingActions.java|plugins/P2PPConnection.java|nbproject/|plugins/sharedmind/gmomo/config/" kind="src" path=""/>
 	<classpathentry kind="lib" path="plugins/svg/xml-apis.jar"/>
 	<classpathentry kind="lib" path="plugins/svg/batik-bridge.jar"/>
 	<classpathentry kind="lib" path="plugins/svg/batik-css.jar"/>
