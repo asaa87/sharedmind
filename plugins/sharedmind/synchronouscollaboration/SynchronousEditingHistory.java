@@ -1,6 +1,9 @@
 package plugins.sharedmind.synchronouscollaboration;
 
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
 
@@ -13,11 +16,16 @@ import freemind.controller.actions.generated.instance.CompoundAction;
 import freemind.controller.actions.generated.instance.CutNodeAction;
 import freemind.controller.actions.generated.instance.DeleteNodeAction;
 import freemind.controller.actions.generated.instance.EditNodeAction;
+import freemind.controller.actions.generated.instance.MoveNodesAction;
 import freemind.controller.actions.generated.instance.NewNodeAction;
 import freemind.controller.actions.generated.instance.NodeAction;
 import freemind.controller.actions.generated.instance.PasteNodeAction;
 import freemind.controller.actions.generated.instance.XmlAction;
+import freemind.modes.MindMapNode;
+import freemind.modes.ModeController;
 import freemind.modes.NodeAdapter;
+import freemind.modes.NodeDownAction;
+import freemind.modes.mindmapmode.actions.NodeUpAction;
 import freemind.modes.mindmapmode.actions.xml.ActionPair;
 
 /**
@@ -85,6 +93,31 @@ public class SynchronousEditingHistory {
 		return return_value;
 	}
 	
+    private Vector getSortedSiblings(MindMapNode node) {
+        Vector nodes = new Vector();
+        for (Iterator i = node.childrenUnfolded(); i.hasNext();) {
+            nodes.add(i.next());
+        }
+        Collections.sort(nodes, new Comparator(){
+
+            public int compare(Object o1, Object o2) {
+                if (o1 instanceof MindMapNode) {
+                    MindMapNode n1 = (MindMapNode) o1;
+                    if (o2 instanceof MindMapNode) {
+                        MindMapNode n2 = (MindMapNode) o2;
+                        // left is less than right
+                        int b1 = n1.isLeft()?0:1;
+                        int b2 = n2.isLeft()?0:1;
+                        return b1 - b2;
+                    }
+                }
+                throw new IllegalArgumentException("Elements in LeftRightComparator are not comparable.");
+            }
+        });
+        //logger.finest("Sorted nodes "+ nodes);
+        return nodes;
+    }
+	
 	private boolean isConflicting(XmlAction action, XmlAction shared_action) {
 		if (action instanceof CompoundAction) {
 			CompoundAction compound = (CompoundAction) action;
@@ -102,6 +135,52 @@ public class SynchronousEditingHistory {
 				((NodeAction) action).getNode().equals(
 						((NodeAction) shared_action).getNode())) {
 			return true;
+		}
+		
+		// Node up conflicting
+		if (action instanceof MoveNodesAction &&
+				shared_action instanceof MoveNodesAction) {
+			MoveNodesAction move_action = (MoveNodesAction) action;
+			MoveNodesAction shared_move_action = (MoveNodesAction) shared_action;
+			
+			ModeController mode_controller = mpc.getController();
+			String local_parent = mode_controller.getNodeFromID(
+					move_action.getNode()).getParentNode().getObjectId(mode_controller);
+			String shared_parent = mode_controller.getNodeFromID(
+					shared_move_action.getNode()).getParentNode().getObjectId(mode_controller);
+			
+			if (local_parent.equals(shared_parent)) {
+				int local_direction = move_action.getDirection();
+				int shared_direction = shared_move_action.getDirection();
+				
+				for (int i = 0; i < move_action.sizeNodeListMemberList(); ++i) {
+					String local_node = move_action.getNodeListMember(i).getNode();
+					for (int j = 0; j < shared_move_action.sizeNodeListMemberList(); ++j) {
+						String shared_node = shared_move_action.getNodeListMember(j).getNode();
+						
+						// Same node is moved twice
+						if (local_node.equals(shared_node)) {
+							return true;
+						}
+						
+						NodeAdapter parent_node = mode_controller.getNodeFromID(local_parent);
+						int child_count = parent_node.getChildCount();
+						int new_local_node_index = 
+							parent_node.getIndex(mode_controller.getNodeFromID(local_node));
+						int local_node_index = 
+							(new_local_node_index - local_direction) % child_count;
+						int shared_node_index = 
+							parent_node.getIndex(mode_controller.getNodeFromID(shared_node));
+						int new_shared_node_index = 
+							(shared_node_index + shared_direction) % child_count;
+						
+						if (local_node_index == new_shared_node_index ||
+								shared_node_index == new_local_node_index) {
+							return true;
+						}
+					}
+				}
+			}
 		}
 		
 		boolean shared_is_delete = shared_action instanceof DeleteNodeAction 
